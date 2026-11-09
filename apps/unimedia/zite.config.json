@@ -1,0 +1,21 @@
+{
+  "id": "fqmatmbmv2",
+  "accessMode": "external",
+  "seoSettings": {
+    "title": "UniMedia",
+    "description": "Powered by EduMotive Trimonthly ",
+    "thumbnailUrl": "",
+    "faviconUrl": "https://images.fillout.com/orgid-890251/flowpublicid-fqmatmbmv2/widgetid-default/hfHxiwzfqwnRV5PHMogaaF/IMG-20261004-WA0014.jpg"
+  },
+  "pwaSettings": {
+    "enabled": true,
+    "title": "UniMedia",
+    "appIconUrl": "https://images.fillout.com/orgid-890251/flowpublicid-fqmatmbmv2/pwa/b12be25ede6b8f10/source-ec651aab8526a76eaecfa9761694178a",
+    "icons": {
+      "icon192Url": "https://images.fillout.com/orgid-890251/flowpublicid-fqmatmbmv2/pwa/b12be25ede6b8f10/icon-192.png",
+      "icon512Url": "https://images.fillout.com/orgid-890251/flowpublicid-fqmatmbmv2/pwa/b12be25ede6b8f10/icon-512.png",
+      "appleTouchIconUrl": "https://images.fillout.com/orgid-890251/flowpublicid-fqmatmbmv2/pwa/b12be25ede6b8f10/apple-touch-icon.png",
+      "favicon32Url": "https://images.fillout.com/orgid-890251/flowpublicid-fqmatmbmv2/pwa/b12be25ede6b8f10/favicon-32.png"
+    }
+  }
+}

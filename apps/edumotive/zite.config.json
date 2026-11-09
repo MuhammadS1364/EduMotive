@@ -1,0 +1,22 @@
+{
+  "id": "pcwcqzbzan",
+  "accessMode": "external",
+  "seoSettings": {
+    "title": "EduMotive Trimonthly",
+    "description": "EduMotive Magazine is a premier trimonthly publication proudly emerging from the vibrant intellectual ecosystem of Darul Huda Islamic University",
+    "thumbnailUrl": "",
+    "faviconUrl": "https://images.fillout.com/orgid-890251/flowpublicid-pcwcqzbzan/widgetid-default/7tCi5MPPNsjGWhZUzHjYDr/IMG-20261004-WA0014.jpg"
+  },
+  "pwaSettings": {
+    "enabled": true,
+    "title": "EduMotive Trimonthly",
+    "appIconUrl": "https://images.fillout.com/orgid-890251/flowpublicid-pcwcqzbzan/pwa/81b3f1abe09e8c3f/source-ec651aab8526a76eaecfa9761694178a",
+    "icons": {
+      "icon192Url": "https://images.fillout.com/orgid-890251/flowpublicid-pcwcqzbzan/pwa/81b3f1abe09e8c3f/icon-192.png",
+      "icon512Url": "https://images.fillout.com/orgid-890251/flowpublicid-pcwcqzbzan/pwa/81b3f1abe09e8c3f/icon-512.png",
+      "appleTouchIconUrl": "https://images.fillout.com/orgid-890251/flowpublicid-pcwcqzbzan/pwa/81b3f1abe09e8c3f/apple-touch-icon.png",
+      "favicon32Url": "https://images.fillout.com/orgid-890251/flowpublicid-pcwcqzbzan/pwa/81b3f1abe09e8c3f/favicon-32.png"
+    },
+    "backgroundColor": ""
+  }
+}

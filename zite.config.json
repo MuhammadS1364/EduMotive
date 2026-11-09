@@ -1,0 +1,16 @@
+{
+  "project": {
+    "name": "Motivation Admin",
+    "basePublicIdentifier": "95d613000b5011ee"
+  },
+  "integrations": {
+    "github": {
+      "type": "github",
+      "connectionId": "svc_579300"
+    },
+    "github-2": {
+      "type": "github",
+      "connectionId": "svc_579318"
+    }
+  }
+}
