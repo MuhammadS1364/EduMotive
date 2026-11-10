@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
-import { zite } from 'zitejs/db';
+import { zite } from '../lib/db';
 
 export default createEndpoint({
   description: "Lists the signed-in member's print subscription orders with delivery tracking",

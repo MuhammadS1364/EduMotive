@@ -1,16 +1,13 @@
-import { useState } from 'react';
 import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
-import { Award, BookOpen, CalendarRange, CreditCard, FileText, Image, LayoutDashboard, Layers, Loader2, LogOut, StickyNote, Trophy, Users, Settings, Megaphone, PenLine } from 'lucide-react';
-import { toast } from 'sonner';
-import { adminLogin } from 'zitejs/api';
+import { Award, BookOpen, CalendarRange, CreditCard, FileText, Image, LayoutDashboard, Layers, Loader2, LogOut, StickyNote, Trophy, Users, Settings, Megaphone, PenLine, GalleryHorizontal } from 'lucide-react';
+import { useAuth, loginWithRedirect, logout } from 'zitejs/auth';
 import { Toaster } from '@project/components/ui/sonner';
 import { Button } from '@project/components/ui/button';
-import { Input } from '@project/components/ui/input';
-import { Label } from '@project/components/ui/label';
 import { cn } from '@project/components/lib/utils';
 import { AdminCtx } from './lib/admin';
+import { ADMIN_EMAILS } from './lib/adminEmails';
 import ThemeToggle from './components/ThemeToggle';
 import Dashboard from './pages/Dashboard';
 import ArticlesAdmin from './pages/ArticlesAdmin';
@@ -18,13 +15,13 @@ import SubscriptionsAdmin from './pages/SubscriptionsAdmin';
 import BadgesAdmin from './pages/BadgesAdmin';
 import UniMediaAdmin from './pages/UniMediaAdmin';
 import PlannerAdmin from './pages/PlannerAdmin';
-import { SectionsAdmin, IssuesAdmin, AboutAdmin, ProgramsAdmin, ResultsAdmin, NotesAdmin, SiteAdmin, AuthorsAdmin } from './pages/ConfigPages';
+import { SectionsAdmin, IssuesAdmin, AboutAdmin, ProgramsAdmin, ResultsAdmin, NotesAdmin, SiteAdmin, AuthorsAdmin, HeroAdmin } from './pages/ConfigPages';
 
 export const LOGO_URL = 'https://images.fillout.com/orgid-886933/flowpublicid-g9mcbthowz/widgetid-default/vJUKs187fWTMbvnC9QkcLg/pasted-image-1791520031939-sk6cjd3r.png';
 const qc = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
 
 const NAV = [
-  ['/', 'Dashboard', LayoutDashboard], ['/articles', 'Articles', FileText], ['/authors', 'Authors', PenLine], ['/sections', 'Sections', Layers],
+  ['/', 'Dashboard', LayoutDashboard], ['/hero', 'Hero Banner', GalleryHorizontal], ['/articles', 'Articles', FileText], ['/authors', 'Authors', PenLine], ['/sections', 'Sections', Layers],
   ['/issues', 'Magazine', BookOpen], ['/badges', 'Badges', Award], ['/subscriptions', 'Subscriptions', CreditCard],
   ['/programs', 'Programs', Megaphone], ['/results', 'Results', Trophy], ['/about', 'About & Team', Users],
   ['/unimedia', 'UniMedia', Image], ['/notes', 'Notes', StickyNote], ['/planner', 'Planner', CalendarRange], ['/settings', 'Contact', Settings],
@@ -34,22 +31,24 @@ function Logo() {
   return <span className="inline-block aspect-[3.4/1] overflow-hidden h-10 "><img src={LOGO_URL} alt="Edumotive" className="logo-img h-full w-full object-cover" /></span>;
 }
 
-function Login({ onLogin }: { onLogin: (t: string) => void }) {
-  const [u, setU] = useState(''); const [p, setP] = useState(''); const [busy, setBusy] = useState(false);
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault(); setBusy(true);
-    try { onLogin((await adminLogin({ username: u, password: p })).token); }
-    catch { toast.error('Incorrect username or password'); } finally { setBusy(false); }
-  };
+function Gate({ children }: { children: React.ReactNode }) {
+  const { user, isLoading } = useAuth();
+  const allowed = !!user && ADMIN_EMAILS.includes(user.email.toLowerCase());
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative">
       <div className="liquid-bg"><div className="blob b1" /><div className="blob b2" /><div className="blob b3" /></div>
-      <form onSubmit={submit} className="glass p-8 w-full max-w-sm space-y-5">
-        <div className="text-center space-y-3"><Logo /><h1 className="text-xl font-bold">Admin panel</h1></div>
-        <div className="space-y-1.5"><Label>Username</Label><Input value={u} onChange={(e) => setU(e.target.value)} autoFocus /></div>
-        <div className="space-y-1.5"><Label>Password</Label><Input type="password" value={p} onChange={(e) => setP(e.target.value)} /></div>
-        <Button className="w-full" disabled={!u || !p || busy}>{busy && <Loader2 className="h-4 w-4 animate-spin" />}Sign in</Button>
-      </form>
+      {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : allowed ? children : (
+        <div className="glass p-8 w-full max-w-sm space-y-5 text-center">
+          <Logo /><h1 className="text-xl font-bold">Admin panel</h1>
+          {user ? (<>
+            <p className="text-sm text-muted-foreground">{user.email} doesn't have admin access. Sign in with the admin account.</p>
+            <Button className="w-full" variant="outline" onClick={() => logout()}><LogOut className="h-4 w-4" />Sign out</Button>
+          </>) : (<>
+            <p className="text-sm text-muted-foreground">Sign in with the admin email — we'll send you a one-time code.</p>
+            <Button className="w-full" onClick={() => loginWithRedirect()}>Sign in</Button>
+          </>)}
+        </div>
+      )}
     </div>
   );
 }
@@ -71,6 +70,7 @@ function Shell({ logout }: { logout: () => void }) {
       <main className="lg:pl-60"><div className="max-w-6xl mx-auto p-4 md:p-8">
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/hero" element={<HeroAdmin />} />
           <Route path="/articles" element={<ArticlesAdmin />} />
           <Route path="/authors" element={<AuthorsAdmin />} />
           <Route path="/sections" element={<SectionsAdmin />} />
@@ -92,14 +92,13 @@ function Shell({ logout }: { logout: () => void }) {
 }
 
 export default function App() {
-  const [token, setToken] = useState(() => localStorage.getItem('em_admin') ?? '');
-  const login = (t: string) => { localStorage.setItem('em_admin', t); setToken(t); };
-  const logout = () => { localStorage.removeItem('em_admin'); setToken(''); };
+  const { user } = useAuth();
+  const allowed = !!user && ADMIN_EMAILS.includes(user.email.toLowerCase());
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={qc}>
-        <AdminCtx.Provider value={{ token, logout }}>
-          {token ? <BrowserRouter><Shell logout={logout} /></BrowserRouter> : <Login onLogin={login} />}
+        <AdminCtx.Provider value={{ logout: () => logout() }}>
+          {allowed ? <BrowserRouter><Shell logout={() => logout()} /></BrowserRouter> : <Gate>{null}</Gate>}
         </AdminCtx.Provider>
         <Toaster />
       </QueryClientProvider>

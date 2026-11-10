@@ -10,6 +10,15 @@ A ZiteJS monorepo containing three apps that share one Zite Database.
 
 Shared UI components (shadcn/ui) live in `packages/components`.
 
+## Database (Turso)
+All app data lives in a [Turso](https://turso.tech) (libSQL) database. `packages/tursodb` holds the schema (`schema.ts`, same tables as the original Zite Database plus `HeroSlides`) and a small HTTP client with the same API the endpoints use (`findAll`, `findOne`, `create`, `update`, `delete`, `bulkCreate`, `sql`). Each app creates its client in `src/lib/db.ts` from two secrets:
+
+- `ZITE_TURSO_URL` – e.g. `libsql://<db>.turso.io`
+- `ZITE_TURSO_AUTH_TOKEN` – a Turso database token
+
+## Admin access
+The admin panel (`apps/motive-admin`) only admits `edumotive4@gmail.com`, signing in with a one-time email code. No passwords are stored in the code.
+
 ## Tech stack
 React + Vite + TypeScript, Tailwind CSS, shadcn/ui, ZiteJS backend endpoints (`src/api/*.ts`) and the Zite Database.
 

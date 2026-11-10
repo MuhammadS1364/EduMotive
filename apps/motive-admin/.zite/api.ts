@@ -4,7 +4,6 @@ import { createCaller } from 'zitejs/caller';
 
 import type { default as _AdminDeleteEp } from '../src/api/adminDelete';
 import type { default as _AdminListEp } from '../src/api/adminList';
-import type { default as _AdminLoginEp } from '../src/api/adminLogin';
 import type { default as _AdminSaveEp } from '../src/api/adminSave';
 import type { default as _AdminSaveSettingsEp } from '../src/api/adminSaveSettings';
 import type { default as _AdminStatsEp } from '../src/api/adminStats';
@@ -18,11 +17,6 @@ type _AdminListCfg = typeof _AdminListEp;
 export type AdminListInputType = NonNullable<_AdminListCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AdminListCfg['execute']>[0]['input'];
 export type AdminListOutputType = Awaited<ReturnType<_AdminListCfg['execute']>>;
 export const adminList = createCaller<AdminListInputType, AdminListOutputType>('adminList');
-
-type _AdminLoginCfg = typeof _AdminLoginEp;
-export type AdminLoginInputType = NonNullable<_AdminLoginCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AdminLoginCfg['execute']>[0]['input'];
-export type AdminLoginOutputType = Awaited<ReturnType<_AdminLoginCfg['execute']>>;
-export const adminLogin = createCaller<AdminLoginInputType, AdminLoginOutputType>('adminLogin');
 
 type _AdminSaveCfg = typeof _AdminSaveEp;
 export type AdminSaveInputType = NonNullable<_AdminSaveCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AdminSaveCfg['execute']>[0]['input'];
@@ -43,7 +37,6 @@ export const adminStats = createCaller<AdminStatsInputType, AdminStatsOutputType
 export const api = {
   adminDelete,
   adminList,
-  adminLogin,
   adminSave,
   adminSaveSettings,
   adminStats,

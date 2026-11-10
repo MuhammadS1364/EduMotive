@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
-import { zite } from 'zitejs/db';
+import { zite } from '../lib/db';
 
 export default createEndpoint({
   description: 'Creates or updates the signed-in member profile (class, institution, student or author)',

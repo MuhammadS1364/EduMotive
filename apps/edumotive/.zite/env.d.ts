@@ -11,6 +11,10 @@ declare namespace NodeJS {
     ZITE_GITHUB_ACCESS_TOKEN: string;
     /** github access token (github-2) */
     ZITE_GITHUB_2_GITHUB_ACCESS_TOKEN: string;
+    /** Turso database auth token (please paste a NEW rotated token) */
+    ZITE_TURSO_AUTH_TOKEN: string;
+    /** Turso database URL, e.g. libsql://edumotive-trimonthly-msdurso.aws-ap-south-1.turso.io */
+    ZITE_TURSO_URL: string;
     [key: string]: string | undefined;
   }
 }

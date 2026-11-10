@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
-import { zite } from 'zitejs/db';
+import { zite } from '../lib/db';
 
 const arr = (v: string | string[] | undefined) => [v].flat().filter((x): x is string => !!x);
 const badge = z.object({ name: z.string(), emoji: z.string(), icon: z.string(), description: z.string() });
@@ -17,10 +17,11 @@ export default createEndpoint({
     sections: z.array(z.object({ id: z.string(), name: z.string(), description: z.string() })),
     plans: z.array(z.object({ id: z.string(), name: z.string(), price: z.number(), duration: z.string(), features: z.array(z.string()) })),
     authors: z.array(z.object({ id: z.string(), name: z.string(), avatar: z.string(), institution: z.string(), class: z.string(), bio: z.string(), role: z.string(), designation: z.string(), count: z.number(), badges: z.array(badge) })),
+    heroSlides: z.array(z.object({ id: z.string(), image: z.string(), link: z.string() })),
     settings: z.record(z.string()),
   }),
   execute: async () => {
-    const [a, i, p, r, t, s, sec, pl, pr, bd] = await Promise.all([
+    const [a, i, p, r, t, s, sec, pl, pr, bd, hs] = await Promise.all([
       zite.articles.findAll({ filters: { status: 'Published' }, limit: 2000, fields: ['title', 'excerpt', 'coverImage', 'section', 'authorName', 'author', 'authorProfile', 'issue', 'featured', 'publishedAt', 'created'] }),
       zite.issues.findAll({ filters: { visible: true }, limit: 500 }),
       zite.programs.findAll({ filters: { visible: true }, limit: 500 }),
@@ -31,6 +32,7 @@ export default createEndpoint({
       zite.subscriptionPlans.findAll({ filters: { visible: true }, limit: 50 }),
       zite.profiles.findAll({ limit: 2000 }),
       zite.badges.findAll({ limit: 200 }),
+      zite.heroSlides.findAll({ filters: { visible: true }, sort: [{ field: 'sortOrder', direction: 'asc' }], limit: 20 }),
     ]);
     const settings: Record<string, string> = {};
     s.records.forEach((x) => { if (x.key) settings[x.key] = x.value ?? ''; });
@@ -57,6 +59,7 @@ export default createEndpoint({
       sections: sec.records.sort((x, y) => (x.sortOrder ?? 0) - (y.sortOrder ?? 0)).map((x) => ({ id: x.id, name: x.name ?? '', description: x.description ?? '' })),
       plans: pl.records.sort((x, y) => (x.sortOrder ?? 0) - (y.sortOrder ?? 0)).map((x) => ({ id: x.id, name: x.name ?? '', price: x.price ?? 0, duration: x.duration ?? '', features: (x.features ?? '').split('\n').map((f) => f.trim()).filter(Boolean) })),
       authors,
+      heroSlides: hs.records.filter((x) => x.image).map((x) => ({ id: x.id, image: x.image ?? '', link: x.link ?? '' })),
       settings,
     };
   },

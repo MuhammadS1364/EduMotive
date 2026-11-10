@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
-import { zite } from 'zitejs/db';
+import { zite } from '../lib/db';
 
 export default createEndpoint({
   description: 'Records a print subscription order with payment proof for the signed-in member',

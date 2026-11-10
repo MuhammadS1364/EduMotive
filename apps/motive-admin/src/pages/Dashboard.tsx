@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { adminStats } from 'zitejs/api';
 import { Skeleton } from '@project/components/ui/skeleton';
-import { useAdmin } from '../lib/admin';
 
 const CARDS: [string, string, string][] = [
   ['pending', 'Articles awaiting approval', '/articles'], ['published', 'Published articles', '/articles'],
@@ -12,8 +11,7 @@ const CARDS: [string, string, string][] = [
 ];
 
 export default function Dashboard() {
-  const { token } = useAdmin();
-  const { data, isLoading } = useQuery({ queryKey: ['stats'], queryFn: () => adminStats({ token }) });
+  const { data, isLoading } = useQuery({ queryKey: ['stats'], queryFn: () => adminStats({}) });
   return (
     <div className="space-y-6">
       <div><h1 className="text-2xl md:text-3xl font-bold">Welcome back 👋</h1><p className="text-muted-foreground">Here's what's happening at Edumotive.</p></div>

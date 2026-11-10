@@ -114,6 +114,8 @@ declare global {
   namespace NodeJS {
     interface ProcessEnv {
       "ZITE_APP_URL": string;
+      "ZITE_TURSO_AUTH_TOKEN": string;
+      "ZITE_TURSO_URL": string;
     }
   }
 }

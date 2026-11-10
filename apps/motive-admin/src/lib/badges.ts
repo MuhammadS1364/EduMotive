@@ -1,4 +1,4 @@
-import { zite } from 'zitejs/db';
+import { zite } from './db';
 
 const THRESHOLDS: Record<string, number> = { 'First Publication': 1, '5 Publications': 5, '10 Publications': 10 };
 const arr = (v: string | string[] | undefined) => [v].flat().filter((x): x is string => !!x);

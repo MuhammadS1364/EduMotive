@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
-import { zite } from 'zitejs/db';
+import { zite } from '../lib/db';
 
 export default createEndpoint({
   description: 'Loads one magazine issue for the flipbook reader',

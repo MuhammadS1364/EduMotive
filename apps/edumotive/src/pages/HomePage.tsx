@@ -5,6 +5,7 @@ import { Skeleton } from '@project/components/ui/skeleton';
 import { Button } from '@project/components/ui/button';
 import { useContent, formatDate, slugify, ArticleSummary } from '../lib/content';
 import ArticleCard from '../components/ArticleCard';
+import HeroSlider from '../components/HeroSlider';
 
 function Hero({ a }: { a: ArticleSummary }) {
   return (
@@ -46,6 +47,8 @@ export default function HomePage() {
   const issue = data.issues[0];
 
   return (
+    <>
+    <HeroSlider slides={data.heroSlides} />
     <div className="container mx-auto px-4 md:px-6 py-8 space-y-14 max-w-7xl">
       {hero ? (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="grid gap-5 lg:grid-cols-3">
@@ -97,6 +100,7 @@ export default function HomePage() {
         </section>
       )}
     </div>
+    </>
   );
 }
 

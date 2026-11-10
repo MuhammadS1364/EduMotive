@@ -18,5 +18,13 @@
       "favicon32Url": "https://images.fillout.com/orgid-890251/flowpublicid-pcwcqzbzan/pwa/81b3f1abe09e8c3f/favicon-32.png"
     },
     "backgroundColor": ""
+  },
+  "envVars": {
+    "ZITE_TURSO_AUTH_TOKEN": {
+      "description": "Turso database auth token (please paste a NEW rotated token)"
+    },
+    "ZITE_TURSO_URL": {
+      "description": "Turso database URL, e.g. libsql://edumotive-trimonthly-msdurso.aws-ap-south-1.turso.io"
+    }
   }
 }

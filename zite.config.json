@@ -12,5 +12,13 @@
       "type": "github",
       "connectionId": "svc_579318"
     }
+  },
+  "envVars": {
+    "ZITE_TURSO_AUTH_TOKEN": {
+      "description": "Turso database auth token (please paste a NEW rotated token)"
+    },
+    "ZITE_TURSO_URL": {
+      "description": "Turso database URL, e.g. libsql://edumotive-trimonthly-msdurso.aws-ap-south-1.turso.io"
+    }
   }
 }

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
-import { zite } from 'zitejs/db';
+import { zite } from '../lib/db';
 
 export default createEndpoint({
   description: 'Submits (or saves as draft) an article from a student or author for admin approval',

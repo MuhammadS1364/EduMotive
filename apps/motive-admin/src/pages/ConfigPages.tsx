@@ -91,3 +91,9 @@ export function AuthorsAdmin() {
       { key: 'bio', label: 'About the author', type: 'textarea' },
     ]} />;
 }
+
+export function HeroAdmin() {
+  return <CrudPage table="heroSlides" title="Hero Banner Slides" titleKey="link" imageKey="image" visibleKey="visible" sort={bySort} defaults={{ visible: true }}
+    subtitle={(r) => `Slide ${r.sortOrder ?? 0}${r.visible ? '' : ' · hidden'}`}
+    fields={[{ key: 'image', label: 'Banner image (wide, e.g. 1920×700)', type: 'image', required: true, full: true }, { key: 'link', label: 'Link when clicked (optional)', type: 'url' }, { key: 'sortOrder', label: 'Order', type: 'number' }, { key: 'visible', label: 'Show on website', type: 'checkbox' }]} />;
+}

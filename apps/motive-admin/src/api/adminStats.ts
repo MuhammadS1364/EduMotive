@@ -1,14 +1,15 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
-import { zite } from 'zitejs/db';
+import { zite } from '../lib/db';
 import { requireAdmin } from '../lib/adminAuth';
 
 export default createEndpoint({
   description: 'Counts key numbers for the admin dashboard',
-  inputSchema: z.object({ token: z.string() }),
+  authenticated: true,
+  inputSchema: z.object({}),
   outputSchema: z.object({ stats: z.record(z.number()) }),
-  execute: async ({ input }) => {
-    requireAdmin(input.token);
+  execute: async ({ context }) => {
+    requireAdmin(context.user);
     const { rows } = await zite.sql({
       query: `SELECT
         (SELECT COUNT(*) FROM "Articles" WHERE "status" = 'Published') AS "published",

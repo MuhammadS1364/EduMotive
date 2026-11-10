@@ -1,15 +1,16 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
-import { zite } from 'zitejs/db';
+import { zite } from '../lib/db';
 import { requireAdmin, TABLES } from '../lib/adminAuth';
 import { syncAuthorBadges } from '../lib/badges';
 
 export default createEndpoint({
   description: 'Creates or updates a content record from the admin panel',
-  inputSchema: z.object({ token: z.string(), table: z.enum(TABLES), id: z.string().optional(), record: z.record(z.any()) }),
+  authenticated: true,
+  inputSchema: z.object({ table: z.enum(TABLES), id: z.string().optional(), record: z.record(z.any()) }),
   outputSchema: z.object({ id: z.string() }),
-  execute: async ({ input }) => {
-    requireAdmin(input.token);
+  execute: async ({ input, context }) => {
+    requireAdmin(context.user);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const client = zite[input.table] as any;
     if (input.id) {

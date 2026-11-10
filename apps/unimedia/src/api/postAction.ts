@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
-import { zite } from 'zitejs/db';
+import { zite } from '../lib/db';
 
 const arr = (v: string | string[] | undefined) => [v].flat().filter((x): x is string => !!x);
 
