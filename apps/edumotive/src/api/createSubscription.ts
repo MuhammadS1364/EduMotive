@@ -14,9 +14,9 @@ export default createEndpoint({
     const profile = await zite.profiles.findOne({ filters: { user: context.user.id } });
     if (!profile) throw new ZiteError('Please complete your profile before ordering.');
     const plan = await zite.subscriptionPlans.findOne({ id: input.planId });
-    const { planId: _p, ...rest } = input;
+    const { planId, ...rest } = input;
     const created = await zite.subscriptions.create({
-      record: { ...rest, planName: plan?.name ?? 'Unknown', amount: plan?.price ?? 0, status: 'Pending', deliveryStatus: 'Awaiting Payment Check', subscriber: context.user.id },
+      record: { ...rest, planId, planName: plan?.name ?? 'Unknown', amount: plan?.price ?? 0, status: 'Pending', deliveryStatus: 'Awaiting Payment Check', subscriber: context.user.id },
     });
     return { id: created.id };
   },

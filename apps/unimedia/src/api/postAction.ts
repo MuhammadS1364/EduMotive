@@ -20,7 +20,7 @@ export default createEndpoint({
   execute: async ({ input, context }) => {
     const uid = context.user.id;
     const profile = await zite.profiles.findOne({ filters: { user: uid } });
-    const name = profile?.name || [context.user.firstName, context.user.lastName].filter(Boolean).join(' ') || context.user.email.split('@')[0];
+    const name = profile?.name || [context.user.firstName, context.user.lastName].filter(Boolean).join(' ') || context.user.email?.split('@')[0] || 'Student';
     if (input.action === 'create') {
       if (!input.image) throw new ZiteError('Please add a photo or video.');
       await zite.posts.create({ record: { image: input.image, mediaType: input.mediaType ?? 'Image', caption: input.caption ?? '', author: uid, authorName: name, institution: input.campus?.trim() || profile?.institution || '', hidden: false } });

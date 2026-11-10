@@ -11,14 +11,23 @@ export default createEndpoint({
   }),
   execute: async ({ input, context }) => {
     const a = await zite.articles.findOne({ id: input.id });
-    const authorIds = a ? [a.author].flat().filter(Boolean) : [];
-    const mine = !!context.user && authorIds.includes(context.user.id);
-    if (!a || (a.status !== 'Published' && !mine)) {
+    if (!a) {
       throw new ZiteError('This article is not available.');
     }
+    const authorIds = [a.author].flat().filter(Boolean);
     const profId = [a.authorProfile].flat().filter(Boolean)[0] as string | undefined;
     let authorId = (authorIds[0] as string) ?? '';
-    if (profId) { const p = await zite.profiles.findOne({ id: profId }); authorId = ([p?.user].flat().filter(Boolean)[0] as string) || profId; }
+    let authorUserId = authorIds[0] as string | undefined;
+    if (profId) {
+      const p = await zite.profiles.findOne({ id: profId });
+      const pUserId = [p?.user].flat().filter(Boolean)[0] as string | undefined;
+      authorId = pUserId || profId;
+      if (pUserId) authorUserId = pUserId;
+    }
+    const mine = !!context.user && (authorIds.includes(context.user.id) || authorUserId === context.user.id);
+    if (a.status !== 'Published' && !mine) {
+      throw new ZiteError('This article is not available.');
+    }
     return {
       id: a.id, title: a.title ?? '', excerpt: a.excerpt ?? '', content: a.content ?? '', coverImage: a.coverImage ?? '',
       section: a.section ?? '', authorName: a.authorName ?? '', authorId, publishedAt: a.publishedAt ?? a.created ?? '', status: a.status ?? '',

@@ -25,7 +25,7 @@ export default createEndpoint({
     if (input.action === 'create') {
       if (!input.media) throw new ZiteError('Please add a photo or video.');
       const p = await zite.profiles.findOne({ filters: { user: uid } });
-      const name = p?.name || context.user.firstName || context.user.email.split('@')[0];
+      const name = p?.name || context.user.firstName || context.user.email?.split('@')[0] || 'Student';
       await zite.stories.create({ record: { media: input.media, mediaType: input.mediaType ?? 'Image', caption: input.caption ?? '', author: uid, authorName: name } });
     } else if (input.action === 'delete' && input.storyId) {
       const s = await zite.stories.findOne({ id: input.storyId });

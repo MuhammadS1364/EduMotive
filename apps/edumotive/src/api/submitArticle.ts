@@ -13,14 +13,17 @@ export default createEndpoint({
   outputSchema: z.object({ id: z.string() }),
   execute: async ({ input, context }) => {
     const profile = await zite.profiles.findOne({ filters: { user: context.user.id } });
-    const authorName = profile?.name || `${context.user.firstName ?? ''} ${context.user.lastName ?? ''}`.trim() || context.user.email;
+    const authorName = profile?.name || `${context.user.firstName ?? ''} ${context.user.lastName ?? ''}`.trim() || context.user.email || 'Author';
     const record = {
       title: input.title, excerpt: input.excerpt, content: input.content, coverImage: input.coverImage, section: input.section,
-      authorName, author: context.user.id, status: input.asDraft ? 'Draft' : 'Pending',
+      authorName, author: context.user.id, authorProfile: profile?.id ? [profile.id] : null, status: input.asDraft ? 'Draft' : 'Pending',
     };
     if (input.id) {
       const existing = await zite.articles.findOne({ id: input.id });
-      if (!existing || ![existing.author].flat().includes(context.user.id)) {
+      const authors = existing ? [existing.author].flat().filter(Boolean) : [];
+      const isAuthorUser = authors.includes(context.user.id);
+      const isAuthorProf = profile?.id && [existing?.authorProfile].flat().filter(Boolean).includes(profile.id);
+      if (!existing || (!isAuthorUser && !isAuthorProf)) {
         throw new ZiteError('You can only edit your own work.');
       }
       if (existing.status === 'Published') {

@@ -65,7 +65,536 @@
 //   "ArticlesProfiles" — columns: "articlesId", "profilesId" (joins "Articles" and "Profiles")
 //   "ArticlesIssues" — columns: "articlesId", "issuesId" (joins "Articles" and "Issues")
 //   "CommentsPosts" — columns: "commentsId", "postsId" (joins "Comments" and "Posts")
-import { createTableClient, createSqlClient, createAuthClient } from 'zitejs/runtime';
+// --- Turso LibSQL Database Client Adapter ---
+const TURSO_URL = (typeof process !== 'undefined' && process.env?.TURSO_DATABASE_URL)
+  || 'https://edumotive-msdurso.aws-ap-south-1.turso.io';
+
+const TURSO_TOKEN = (typeof process !== 'undefined' && process.env?.TURSO_AUTH_TOKEN)
+  || 'eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJhIjoicnciLCJpYXQiOjE3OTQyNzIzOTEsImlkIjoiMDFhMWMxMmItOTIwMS03YjlhLWFiYmUtY2E1MWY3ODY1N2JjIiwia2lkIjoiOU9MNjgwUE1WUjQ5NnNhZ0JWRzFja0p2WEVna2xzUm41dkQ1bWxXNm4tRSIsInJpZCI6ImFjZjJiMjc4LWU3YTUtNGRjMy1iZjQ3LTc4OTc0ZTg1ZTYzYiJ9.-8wFLsO6EHfX7r_HA6ak5Pe-JEdGbxu62BCDZGiK4y3yxO2WmPfGzS_o8AN0Jw7kxk6d4e5HByH7n0379YTyBQ';
+
+function getHttpUrl(rawUrl: string): string {
+  const base = rawUrl.replace(/^libsql:\/\//, 'https://').replace(/\/$/, '');
+  return base.endsWith('/v2/pipeline') ? base : `${base}/v2/pipeline`;
+}
+
+interface TursoValue {
+  type: 'null' | 'integer' | 'float' | 'text' | 'blob';
+  value?: string | number;
+  base64?: string;
+}
+
+function toTursoValue(val: unknown): TursoValue {
+  if (val === null || val === undefined) return { type: 'null' };
+  if (typeof val === 'boolean') return { type: 'integer', value: val ? '1' : '0' };
+  if (typeof val === 'number') {
+    if (Number.isInteger(val)) return { type: 'integer', value: String(val) };
+    return { type: 'float', value: val };
+  }
+  if (val instanceof Date) return { type: 'text', value: val.toISOString() };
+  if (Array.isArray(val) || (typeof val === 'object' && val !== null)) {
+    return { type: 'text', value: JSON.stringify(val) };
+  }
+  return { type: 'text', value: String(val) };
+}
+
+function fromTursoCell(cell: any, decltype?: string): any {
+  if (!cell || cell.type === 'null' || cell.value === undefined) return null;
+  if (cell.type === 'integer') {
+    const n = Number(cell.value);
+    const dt = (decltype || '').toUpperCase();
+    if (dt.includes('BOOL') || (dt.includes('INT') && (dt.includes('VIS') || dt.includes('FEAT') || dt.includes('HID') || dt.includes('PIN')))) {
+      return n === 1;
+    }
+    return n;
+  }
+  if (cell.type === 'float') return Number(cell.value);
+  return cell.value;
+}
+
+async function runTursoQuery(sql: string, args: unknown[] = []): Promise<{ cols: { name: string; decltype?: string }[]; rows: any[][] }> {
+  const url = getHttpUrl(TURSO_URL);
+  const payload = {
+    requests: [
+      {
+        type: 'execute',
+        stmt: {
+          sql,
+          args: args.map(toTursoValue),
+        },
+      },
+    ],
+  };
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${TURSO_TOKEN}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Turso HTTP ${res.status}: ${errText}`);
+  }
+
+  const data = await res.json();
+  const first = data.results?.[0];
+  if (first?.type === 'error') {
+    throw new Error(first.error?.message || 'Turso query execution error');
+  }
+
+  const result = first?.response?.result;
+  return {
+    cols: result?.cols || [],
+    rows: result?.rows || [],
+  };
+}
+
+function generateId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+interface TableMapping {
+  tableName: string;
+  fieldToCol: Record<string, string>;
+  colToField: Record<string, string>;
+  boolCols: Set<string>;
+  arrayFields: Set<string>;
+}
+
+const TABLE_SCHEMAS: Record<string, TableMapping> = {
+  Profiles: {
+    tableName: 'profiles',
+    fieldToCol: { id: 'id', user: 'user_id', name: 'name', role: 'role', class: 'class', institution: 'institution', bio: 'bio', avatar: 'avatar', designation: 'designation', badges: 'badges', created: 'created_at', updated: 'updated_at' },
+    colToField: { id: 'id', user_id: 'user', name: 'name', role: 'role', class: 'class', institution: 'institution', bio: 'bio', avatar: 'avatar', designation: 'designation', badges: 'badges', created_at: 'created', updated_at: 'updated' },
+    boolCols: new Set([]),
+    arrayFields: new Set(['user', 'badges']),
+  },
+  Articles: {
+    tableName: 'articles',
+    fieldToCol: { id: 'id', title: 'title', excerpt: 'excerpt', content: 'content', coverImage: 'cover_image', section: 'section', authorName: 'author_name', author: 'author_user_id', authorProfile: 'author_profile_id', issue: 'issue_id', status: 'status', featured: 'featured', publishedAt: 'published_at', created: 'created_at' },
+    colToField: { id: 'id', title: 'title', excerpt: 'excerpt', content: 'content', cover_image: 'coverImage', section: 'section', author_name: 'authorName', author_user_id: 'author', author_profile_id: 'authorProfile', issue_id: 'issue', status: 'status', featured: 'featured', published_at: 'publishedAt', created_at: 'created' },
+    boolCols: new Set(['featured']),
+    arrayFields: new Set(['author', 'authorProfile', 'issue']),
+  },
+  Issues: {
+    tableName: 'issues',
+    fieldToCol: { id: 'id', title: 'title', description: 'description', coverImage: 'cover_image', pdfUrl: 'pdf_url', issueDate: 'issue_date', visible: 'visible' },
+    colToField: { id: 'id', title: 'title', description: 'description', cover_image: 'coverImage', pdf_url: 'pdfUrl', issue_date: 'issueDate', visible: 'visible' },
+    boolCols: new Set(['visible']),
+    arrayFields: new Set([]),
+  },
+  TeamMembers: {
+    tableName: 'team_members',
+    fieldToCol: { id: 'id', name: 'name', designation: 'designation', photo: 'photo', phone: 'phone', address: 'address', email: 'email', instagram: 'instagram', linkedin: 'linkedin', twitter: 'twitter', facebook: 'facebook', bio: 'bio', sortOrder: 'sort_order' },
+    colToField: { id: 'id', name: 'name', designation: 'designation', photo: 'photo', phone: 'phone', address: 'address', email: 'email', instagram: 'instagram', linkedin: 'linkedin', twitter: 'twitter', facebook: 'facebook', bio: 'bio', sort_order: 'sortOrder' },
+    boolCols: new Set([]),
+    arrayFields: new Set([]),
+  },
+  SiteSettings: {
+    tableName: 'site_settings',
+    fieldToCol: { id: 'id', key: 'key', value: 'value' },
+    colToField: { id: 'id', key: 'key', value: 'value' },
+    boolCols: new Set([]),
+    arrayFields: new Set([]),
+  },
+  Programs: {
+    tableName: 'programs',
+    fieldToCol: { id: 'id', title: 'title', image: 'image', fee: 'fee', description: 'description', eligibility: 'eligibility', mode: 'mode', registrationLink: 'registration_link', eventDate: 'event_date', visible: 'visible' },
+    colToField: { id: 'id', title: 'title', image: 'image', fee: 'fee', description: 'description', eligibility: 'eligibility', mode: 'mode', registration_link: 'registrationLink', event_date: 'eventDate', visible: 'visible' },
+    boolCols: new Set(['visible']),
+    arrayFields: new Set([]),
+  },
+  Results: {
+    tableName: 'results',
+    fieldToCol: { id: 'id', participant: 'participant', programName: 'program_name', position: 'position', institution: 'institution', visible: 'visible' },
+    colToField: { id: 'id', participant: 'participant', program_name: 'programName', position: 'position', institution: 'institution', visible: 'visible' },
+    boolCols: new Set(['visible']),
+    arrayFields: new Set([]),
+  },
+  Comments: {
+    tableName: 'comments',
+    fieldToCol: { id: 'id', post: 'post_id', postId: 'post_id', text: 'text', author: 'author_user_id', authorName: 'author_name', created: 'created_at' },
+    colToField: { id: 'id', post_id: 'post', text: 'text', author_user_id: 'author', author_name: 'authorName', created_at: 'created' },
+    boolCols: new Set([]),
+    arrayFields: new Set(['post', 'author']),
+  },
+  Posts: {
+    tableName: 'posts',
+    fieldToCol: { id: 'id', caption: 'caption', image: 'image', mediaType: 'media_type', author: 'author_user_id', authorName: 'author_name', institution: 'institution', hidden: 'hidden', likedBy: 'liked_by', comments: 'comments', created: 'created_at' },
+    colToField: { id: 'id', caption: 'caption', image: 'image', media_type: 'mediaType', author_user_id: 'author', author_name: 'authorName', institution: 'institution', hidden: 'hidden', liked_by: 'likedBy', comments: 'comments', created_at: 'created' },
+    boolCols: new Set(['hidden']),
+    arrayFields: new Set(['author', 'likedBy', 'comments']),
+  },
+  Subscriptions: {
+    tableName: 'subscriptions',
+    fieldToCol: { id: 'id', subscriber: 'subscriber_user_id', planId: 'plan_id', planName: 'plan_name', plan: 'plan', name: 'name', email: 'email', phone: 'phone', address: 'address', amount: 'amount', transactionId: 'transaction_id', paymentScreenshot: 'payment_screenshot', status: 'status', deliveryStatus: 'delivery_status', trackingNumber: 'tracking_number', created: 'created_at' },
+    colToField: { id: 'id', subscriber_user_id: 'subscriber', plan_id: 'planId', plan_name: 'planName', plan: 'plan', name: 'name', email: 'email', phone: 'phone', address: 'address', amount: 'amount', transaction_id: 'transactionId', payment_screenshot: 'paymentScreenshot', status: 'status', delivery_status: 'deliveryStatus', tracking_number: 'trackingNumber', created_at: 'created' },
+    boolCols: new Set([]),
+    arrayFields: new Set(['subscriber']),
+  },
+  Notes: {
+    tableName: 'notes',
+    fieldToCol: { id: 'id', title: 'title', content: 'content', color: 'color', pinned: 'pinned', updated: 'updated_at' },
+    colToField: { id: 'id', title: 'title', content: 'content', color: 'color', pinned: 'pinned', updated_at: 'updated' },
+    boolCols: new Set(['pinned']),
+    arrayFields: new Set([]),
+  },
+  ContentPlans: {
+    tableName: 'content_plans',
+    fieldToCol: { id: 'id', title: 'title', description: 'description', status: 'status', dueDate: 'due_date', assignee: 'assignee' },
+    colToField: { id: 'id', title: 'title', description: 'description', status: 'status', due_date: 'dueDate', assignee: 'assignee' },
+    boolCols: new Set([]),
+    arrayFields: new Set([]),
+  },
+  Sections: {
+    tableName: 'sections',
+    fieldToCol: { id: 'id', name: 'name', description: 'description', visible: 'visible', sortOrder: 'sort_order' },
+    colToField: { id: 'id', name: 'name', description: 'description', visible: 'visible', sort_order: 'sortOrder' },
+    boolCols: new Set(['visible']),
+    arrayFields: new Set([]),
+  },
+  Badges: {
+    tableName: 'badges',
+    fieldToCol: { id: 'id', name: 'name', description: 'description', emoji: 'emoji', icon: 'icon', rule: 'rule', profiles: 'profiles' },
+    colToField: { id: 'id', name: 'name', description: 'description', emoji: 'emoji', icon: 'icon', rule: 'rule', profiles: 'profiles' },
+    boolCols: new Set([]),
+    arrayFields: new Set(['profiles']),
+  },
+  Stories: {
+    tableName: 'stories',
+    fieldToCol: { id: 'id', caption: 'caption', media: 'media', mediaType: 'media_type', author: 'author_user_id', authorName: 'author_name', created: 'created_at' },
+    colToField: { id: 'id', caption: 'caption', media: 'media', media_type: 'mediaType', author_user_id: 'author', author_name: 'authorName', created_at: 'created' },
+    boolCols: new Set([]),
+    arrayFields: new Set(['author']),
+  },
+  SubscriptionPlans: {
+    tableName: 'subscription_plans',
+    fieldToCol: { id: 'id', name: 'name', price: 'price', duration: 'duration', features: 'features', visible: 'visible', sortOrder: 'sort_order' },
+    colToField: { id: 'id', name: 'name', price: 'price', duration: 'duration', features: 'features', visible: 'visible', sort_order: 'sortOrder' },
+    boolCols: new Set(['visible']),
+    arrayFields: new Set([]),
+  },
+};
+
+function ensureUserExists(userId: string): Promise<any> {
+  if (!userId) return Promise.resolve();
+  return runTursoQuery('INSERT OR IGNORE INTO users (id) VALUES (?);', [userId]).catch(() => {});
+}
+
+export function createTableClient<TRec, TInput>(sdkName: string) {
+  const schema = TABLE_SCHEMAS[sdkName] || {
+    tableName: sdkName.toLowerCase(),
+    fieldToCol: {},
+    colToField: {},
+    boolCols: new Set<string>(),
+    arrayFields: new Set<string>(),
+  };
+
+  const toColName = (f: string) => schema.fieldToCol[f] || f;
+  const toFieldName = (c: string) => schema.colToField[c] || c;
+
+  const mapRowToRecord = (cols: { name: string; decltype?: string }[], row: any[]): TRec => {
+    const rec: Record<string, any> = {};
+    for (let i = 0; i < cols.length; i++) {
+      const cName = cols[i].name;
+      const fName = toFieldName(cName);
+      let val = fromTursoCell(row[i], cols[i].decltype);
+
+      if (schema.boolCols.has(fName) || schema.boolCols.has(cName)) {
+        val = val === 1 || val === true || val === '1' || val === 'true';
+      } else if (schema.arrayFields.has(fName)) {
+        if (typeof val === 'string' && (val.startsWith('[') || val.startsWith('{'))) {
+          try { val = JSON.parse(val); } catch {}
+        }
+        if (val !== null && val !== undefined) {
+          rec[fName] = Array.isArray(val) ? val : [val];
+          continue;
+        } else {
+          rec[fName] = [];
+          continue;
+        }
+      }
+      rec[fName] = val;
+    }
+    return rec as TRec;
+  };
+
+  return {
+    async findAll(params: {
+      filters?: Record<string, any>;
+      sort?: { field: string; direction: 'asc' | 'desc' }[];
+      offset?: number;
+      limit?: number;
+      fields?: string[];
+    } = {}): Promise<{ records: TRec[]; hasMore: boolean }> {
+      const whereClauses: string[] = [];
+      const args: unknown[] = [];
+
+      if (params.filters) {
+        for (const [key, rawVal] of Object.entries(params.filters)) {
+          if (rawVal === undefined) continue;
+          const col = toColName(key);
+
+          if (rawVal !== null && typeof rawVal === 'object' && !Array.isArray(rawVal)) {
+            if ('not' in rawVal) {
+              if (rawVal.not === null) {
+                whereClauses.push(`"${col}" IS NOT NULL`);
+              } else {
+                whereClauses.push(`"${col}" != ?`);
+                args.push(rawVal.not);
+              }
+            } else if ('contains' in rawVal) {
+              whereClauses.push(`"${col}" LIKE ?`);
+              args.push(`%${rawVal.contains}%`);
+            } else if ('in' in rawVal) {
+              const list = Array.isArray(rawVal.in) ? rawVal.in : [rawVal.in];
+              if (list.length === 0) {
+                whereClauses.push('1 = 0');
+              } else {
+                const placeholders = list.map(() => '?').join(', ');
+                whereClauses.push(`"${col}" IN (${placeholders})`);
+                args.push(...list);
+              }
+            } else if ('notIn' in rawVal) {
+              const list = Array.isArray(rawVal.notIn) ? rawVal.notIn : [rawVal.notIn];
+              if (list.length > 0) {
+                const placeholders = list.map(() => '?').join(', ');
+                whereClauses.push(`"${col}" NOT IN (${placeholders})`);
+                args.push(...list);
+              }
+            } else if ('lt' in rawVal) {
+              whereClauses.push(`"${col}" < ?`);
+              args.push(rawVal.lt);
+            } else if ('lte' in rawVal) {
+              whereClauses.push(`"${col}" <= ?`);
+              args.push(rawVal.lte);
+            } else if ('gt' in rawVal) {
+              whereClauses.push(`"${col}" > ?`);
+              args.push(rawVal.gt);
+            } else if ('gte' in rawVal) {
+              whereClauses.push(`"${col}" >= ?`);
+              args.push(rawVal.gte);
+            }
+          } else if (rawVal === null) {
+            whereClauses.push(`"${col}" IS NULL`);
+          } else {
+            let val = rawVal;
+            if (typeof val === 'boolean') val = val ? 1 : 0;
+            whereClauses.push(`"${col}" = ?`);
+            args.push(val);
+          }
+        }
+      }
+
+      let selectCols = '*';
+      if (params.fields && params.fields.length > 0) {
+        const uniqueCols = new Set<string>();
+        uniqueCols.add('id');
+        for (const f of params.fields) {
+          uniqueCols.add(toColName(f));
+        }
+        selectCols = Array.from(uniqueCols).map((c) => `"${c}"`).join(', ');
+      }
+
+      let sql = `SELECT ${selectCols} FROM "${schema.tableName}"`;
+      if (whereClauses.length > 0) {
+        sql += ` WHERE ${whereClauses.join(' AND ')}`;
+      }
+
+      if (params.sort && params.sort.length > 0) {
+        const orderParts = params.sort.map((s) => `"${toColName(s.field)}" ${s.direction.toUpperCase()}`);
+        sql += ` ORDER BY ${orderParts.join(', ')}`;
+      }
+
+      const limit = Math.min(params.limit ?? 500, 2000);
+      sql += ` LIMIT ?`;
+      args.push(limit + 1);
+
+      if (params.offset && params.offset > 0) {
+        sql += ` OFFSET ?`;
+        args.push(params.offset);
+      }
+
+      const { cols, rows } = await runTursoQuery(sql, args);
+      const hasMore = rows.length > limit;
+      const trimmedRows = hasMore ? rows.slice(0, limit) : rows;
+      const records = trimmedRows.map((r) => mapRowToRecord(cols, r));
+
+      return { records, hasMore };
+    },
+
+    async findOne(params: {
+      id?: string;
+      filters?: Record<string, any>;
+      fields?: string[];
+    }): Promise<TRec | undefined> {
+      const filters = { ...(params.filters || {}) };
+      if (params.id) filters.id = params.id;
+      const { records } = await this.findAll({ filters, fields: params.fields, limit: 1 });
+      return records[0];
+    },
+
+    async create(params: { record: TInput | Record<string, any> }): Promise<TRec> {
+      const rawRec = { ...params.record } as Record<string, any>;
+      const id = rawRec.id || generateId();
+      rawRec.id = id;
+
+      if (rawRec.user) await ensureUserExists(Array.isArray(rawRec.user) ? rawRec.user[0] : rawRec.user);
+      if (rawRec.author) await ensureUserExists(Array.isArray(rawRec.author) ? rawRec.author[0] : rawRec.author);
+      if (rawRec.subscriber) await ensureUserExists(Array.isArray(rawRec.subscriber) ? rawRec.subscriber[0] : rawRec.subscriber);
+
+      const colNames: string[] = [];
+      const placeholders: string[] = [];
+      const args: unknown[] = [];
+
+      for (const [key, val] of Object.entries(rawRec)) {
+        if (val === undefined) continue;
+        const col = toColName(key);
+        colNames.push(`"${col}"`);
+        placeholders.push('?');
+
+        let cleanVal = val;
+        if (schema.boolCols.has(key) || schema.boolCols.has(col)) {
+          cleanVal = val ? 1 : 0;
+        } else if (Array.isArray(val)) {
+          cleanVal = key === 'badges' || key === 'likedBy' ? JSON.stringify(val) : (val[0] ?? null);
+        }
+        args.push(cleanVal);
+      }
+
+      const sql = `INSERT INTO "${schema.tableName}" (${colNames.join(', ')}) VALUES (${placeholders.join(', ')});`;
+      await runTursoQuery(sql, args);
+
+      const created = await this.findOne({ id });
+      return (created || { id, ...rawRec }) as TRec;
+    },
+
+    async update(params: { id: string; record: Partial<TInput> | Record<string, any> }): Promise<{ id: string; fields: Partial<TRec> }> {
+      const rawRec = { ...params.record } as Record<string, any>;
+      delete rawRec.id;
+
+      if (rawRec.user) await ensureUserExists(Array.isArray(rawRec.user) ? rawRec.user[0] : rawRec.user);
+      if (rawRec.author) await ensureUserExists(Array.isArray(rawRec.author) ? rawRec.author[0] : rawRec.author);
+      if (rawRec.subscriber) await ensureUserExists(Array.isArray(rawRec.subscriber) ? rawRec.subscriber[0] : rawRec.subscriber);
+
+      const setClauses: string[] = [];
+      const args: unknown[] = [];
+
+      for (const [key, val] of Object.entries(rawRec)) {
+        if (val === undefined) continue;
+        const col = toColName(key);
+        setClauses.push(`"${col}" = ?`);
+
+        let cleanVal = val;
+        if (schema.boolCols.has(key) || schema.boolCols.has(col)) {
+          cleanVal = val ? 1 : 0;
+        } else if (Array.isArray(val)) {
+          cleanVal = key === 'badges' || key === 'likedBy' ? JSON.stringify(val) : (val[0] ?? null);
+        }
+        args.push(cleanVal);
+      }
+
+      if (setClauses.length > 0) {
+        args.push(params.id);
+        const sql = `UPDATE "${schema.tableName}" SET ${setClauses.join(', ')} WHERE "id" = ?;`;
+        await runTursoQuery(sql, args);
+      }
+
+      return { id: params.id, fields: rawRec as Partial<TRec> };
+    },
+
+    async delete(params: { id: string }): Promise<{ success: boolean; id: string }> {
+      await runTursoQuery(`DELETE FROM "${schema.tableName}" WHERE "id" = ?;`, [params.id]);
+      return { success: true, id: params.id };
+    },
+
+    async bulkCreate(params: { records: (TInput | Record<string, any>)[]; matchOn?: string[] }): Promise<{ success: boolean; records: TRec[] }> {
+      const results: TRec[] = [];
+      for (const rec of params.records) {
+        if (params.matchOn && params.matchOn.length > 0) {
+          const filters: Record<string, any> = {};
+          for (const mField of params.matchOn) {
+            filters[mField] = (rec as Record<string, any>)[mField];
+          }
+          const existing = await this.findOne({ filters });
+          if (existing && (existing as any).id) {
+            await this.update({ id: (existing as any).id, record: rec });
+            results.push({ ...(existing as any), ...rec });
+            continue;
+          }
+        }
+        const created = await this.create({ record: rec });
+        results.push(created);
+      }
+      return { success: true, records: results };
+    },
+  };
+}
+
+export function createSqlClient() {
+  return async (params: { query: string; params?: unknown[] }): Promise<{ rows: Record<string, unknown>[]; columns: any[]; rowCount: number; truncated: boolean }> => {
+    let sql = params.query;
+    // Remap double-quoted table names if in PascalCase
+    for (const [sdkName, s] of Object.entries(TABLE_SCHEMAS)) {
+      const reg = new RegExp(`"${sdkName}"`, 'g');
+      sql = sql.replace(reg, `"${s.tableName}"`);
+    }
+    sql = sql.replace(/\$(\d+)/g, '?');
+
+    const { cols, rows } = await runTursoQuery(sql, params.params || []);
+    const resultRows = rows.map((r) => {
+      const obj: Record<string, unknown> = {};
+      for (let i = 0; i < cols.length; i++) {
+        obj[cols[i].name] = fromTursoCell(r[i], cols[i].decltype);
+      }
+      return obj;
+    });
+
+    return {
+      rows: resultRows,
+      columns: cols.map((c) => ({ name: c.name, originalName: c.name })),
+      rowCount: resultRows.length,
+      truncated: false,
+    };
+  };
+}
+
+export function createAuthClient<U extends { id: string }>() {
+  return {
+    async findAllUsers(params: { limit?: number; offset?: number } = {}): Promise<U[]> {
+      const limit = params.limit ?? 100;
+      const offset = params.offset ?? 0;
+      const { rows } = await runTursoQuery('SELECT id, email, first_name, last_name, image FROM users LIMIT ? OFFSET ?;', [limit, offset]);
+      return rows.map((r) => ({
+        id: r[0]?.value ?? '',
+        email: r[1]?.value ?? '',
+        firstName: r[2]?.value ?? '',
+        lastName: r[3]?.value ?? '',
+        name: [r[2]?.value, r[3]?.value].filter(Boolean).join(' ') || r[1]?.value || '',
+        image: r[4]?.value ?? null,
+      })) as unknown as U[];
+    },
+
+    async updateUserProfile(userId: string, data: { firstName?: string; lastName?: string; image?: string | null }) {
+      await ensureUserExists(userId);
+      await runTursoQuery(
+        'UPDATE users SET first_name = COALESCE(?, first_name), last_name = COALESCE(?, last_name), image = COALESCE(?, image) WHERE id = ?;',
+        [data.firstName ?? null, data.lastName ?? null, data.image ?? null, userId]
+      );
+    },
+  };
+}
+
 
 /** An attachment as returned when reading a record. */
 export type ZiteAttachment = {

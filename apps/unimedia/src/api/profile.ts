@@ -20,6 +20,9 @@ export default createEndpoint({
     const uid = input.userId || context.user.id;
     const isMe = uid === context.user.id;
     let p = await zite.profiles.findOne({ filters: { user: uid } });
+    if (!p && input.userId) {
+      p = await zite.profiles.findOne({ id: input.userId });
+    }
     if (isMe && input.save) {
       const { role, ...rest } = input.save;
       if (p) { await zite.profiles.update({ id: p.id, record: role ? { ...rest, role } : rest }); }
