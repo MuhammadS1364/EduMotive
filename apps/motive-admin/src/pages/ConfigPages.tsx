@@ -95,5 +95,18 @@ export function AuthorsAdmin() {
 export function HeroAdmin() {
   return <CrudPage table="heroSlides" title="Hero Banner Slides" titleKey="link" imageKey="image" visibleKey="visible" sort={bySort} defaults={{ visible: true }}
     subtitle={(r) => `Slide ${r.sortOrder ?? 0}${r.visible ? '' : ' · hidden'}`}
-    fields={[{ key: 'image', label: 'Banner image (wide, e.g. 1920×700)', type: 'image', required: true, full: true }, { key: 'link', label: 'Link when clicked (optional)', type: 'url' }, { key: 'sortOrder', label: 'Order', type: 'number' }, { key: 'visible', label: 'Show on website', type: 'checkbox' }]} />;
+    fields={[{ key: 'image', label: 'Banner image or video — any size, shown landscape (best 16:9, e.g. 1920×1080). Videos play muted & loop.', type: 'media', required: true, full: true }, { key: 'link', label: 'Link when clicked (optional)', type: 'url' }, { key: 'sortOrder', label: 'Order', type: 'number' }, { key: 'visible', label: 'Show on website', type: 'checkbox' }]} />;
+}
+
+export function NewsAdmin() {
+  return <CrudPage table="news" title="News & Updates" titleKey="title" imageKey="media" visibleKey="visible" defaults={{ visible: true, publishedAt: new Date().toISOString().slice(0, 10) }}
+    sort={(a, b) => Number(!!b.pinned) - Number(!!a.pinned) || String(b.publishedAt ?? '').localeCompare(String(a.publishedAt ?? ''))}
+    subtitle={(r) => `${r.pinned ? '📌 ' : ''}${fmtDate(r.publishedAt)}${r.category ? ' · ' + r.category : ''}${r.visible ? '' : ' · hidden'}`}
+    fields={[
+      { key: 'title', label: 'Headline', type: 'text', required: true, full: true },
+      { key: 'media', label: 'Image or video (landscape works best)', type: 'media', full: true },
+      { key: 'category', label: 'Category (e.g. Announcement, Event)', type: 'text' }, { key: 'publishedAt', label: 'Date', type: 'date', required: true },
+      { key: 'summary', label: 'Short summary', type: 'textarea' }, { key: 'body', label: 'Full update (markdown supported)', type: 'textarea' },
+      { key: 'pinned', label: 'Pin to top', type: 'checkbox' }, { key: 'visible', label: 'Show on website', type: 'checkbox' },
+    ]} />;
 }

@@ -10,5 +10,5 @@ export function requireAdmin(user: { email: string }) {
   }
 }
 
-export const TABLES = ['articles', 'issues', 'teamMembers', 'programs', 'results', 'subscriptions', 'posts', 'notes', 'contentPlans', 'siteSettings', 'comments', 'profiles', 'sections', 'badges', 'subscriptionPlans', 'heroSlides'] as const;
+export const TABLES = ['articles', 'issues', 'teamMembers', 'programs', 'results', 'subscriptions', 'posts', 'notes', 'contentPlans', 'siteSettings', 'comments', 'profiles', 'sections', 'badges', 'subscriptionPlans', 'heroSlides', 'news'] as const;
 export type TableName = (typeof TABLES)[number];

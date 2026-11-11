@@ -1,7 +1,7 @@
 import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ThemeProvider } from 'next-themes';
-import { Award, BookOpen, CalendarRange, CreditCard, FileText, Image, LayoutDashboard, Layers, Loader2, LogOut, StickyNote, Trophy, Users, Settings, Megaphone, PenLine, GalleryHorizontal } from 'lucide-react';
+import { Award, BookOpen, CalendarRange, CreditCard, FileText, Image, LayoutDashboard, Layers, Loader2, LogOut, StickyNote, Trophy, Users, Settings, Megaphone, PenLine, GalleryHorizontal, Newspaper } from 'lucide-react';
 import { useAuth, loginWithRedirect, logout } from 'zitejs/auth';
 import { Toaster } from '@project/components/ui/sonner';
 import { Button } from '@project/components/ui/button';
@@ -15,13 +15,13 @@ import SubscriptionsAdmin from './pages/SubscriptionsAdmin';
 import BadgesAdmin from './pages/BadgesAdmin';
 import UniMediaAdmin from './pages/UniMediaAdmin';
 import PlannerAdmin from './pages/PlannerAdmin';
-import { SectionsAdmin, IssuesAdmin, AboutAdmin, ProgramsAdmin, ResultsAdmin, NotesAdmin, SiteAdmin, AuthorsAdmin, HeroAdmin } from './pages/ConfigPages';
+import { SectionsAdmin, IssuesAdmin, AboutAdmin, ProgramsAdmin, ResultsAdmin, NotesAdmin, SiteAdmin, AuthorsAdmin, HeroAdmin, NewsAdmin } from './pages/ConfigPages';
 
 export const LOGO_URL = 'https://images.fillout.com/orgid-886933/flowpublicid-g9mcbthowz/widgetid-default/vJUKs187fWTMbvnC9QkcLg/pasted-image-1791520031939-sk6cjd3r.png';
 const qc = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
 
 const NAV = [
-  ['/', 'Dashboard', LayoutDashboard], ['/hero', 'Hero Banner', GalleryHorizontal], ['/articles', 'Articles', FileText], ['/authors', 'Authors', PenLine], ['/sections', 'Sections', Layers],
+  ['/', 'Dashboard', LayoutDashboard], ['/hero', 'Hero Banner', GalleryHorizontal], ['/news', 'News', Newspaper], ['/articles', 'Articles', FileText], ['/authors', 'Authors', PenLine], ['/sections', 'Sections', Layers],
   ['/issues', 'Magazine', BookOpen], ['/badges', 'Badges', Award], ['/subscriptions', 'Subscriptions', CreditCard],
   ['/programs', 'Programs', Megaphone], ['/results', 'Results', Trophy], ['/about', 'About & Team', Users],
   ['/unimedia', 'UniMedia', Image], ['/notes', 'Notes', StickyNote], ['/planner', 'Planner', CalendarRange], ['/settings', 'Contact', Settings],
@@ -71,6 +71,7 @@ function Shell({ logout }: { logout: () => void }) {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/hero" element={<HeroAdmin />} />
+          <Route path="/news" element={<NewsAdmin />} />
           <Route path="/articles" element={<ArticlesAdmin />} />
           <Route path="/authors" element={<AuthorsAdmin />} />
           <Route path="/sections" element={<SectionsAdmin />} />

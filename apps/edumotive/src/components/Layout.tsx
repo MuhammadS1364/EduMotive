@@ -22,7 +22,7 @@ export default function Layout() {
     ...(s.showPrograms !== 'false' ? [['/programs', 'Programs'] as [string, string]] : []),
     ...(s.showResults !== 'false' ? [['/results', 'Results'] as [string, string]] : []),
     ...(s.showSubscribe !== 'false' ? [['/subscribe', 'Subscribe'] as [string, string]] : []),
-    ['/about', 'About Us'], ['/contact', 'Join & Contact'],
+    ['/news', 'News'], ['/about', 'About Us'], ['/contact', 'Join & Contact'],
   ];
 
   return (

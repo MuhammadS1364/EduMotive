@@ -7,6 +7,7 @@ import type { default as _GetArticleEp } from '../src/api/getArticle';
 import type { default as _GetIssueEp } from '../src/api/getIssue';
 import type { default as _GetMyProfileEp } from '../src/api/getMyProfile';
 import type { default as _GetMySubscriptionsEp } from '../src/api/getMySubscriptions';
+import type { default as _GetNewsEp } from '../src/api/getNews';
 import type { default as _GetPublicContentEp } from '../src/api/getPublicContent';
 import type { default as _SaveProfileEp } from '../src/api/saveProfile';
 import type { default as _SubmitArticleEp } from '../src/api/submitArticle';
@@ -36,6 +37,11 @@ export type GetMySubscriptionsInputType = NonNullable<_GetMySubscriptionsCfg['in
 export type GetMySubscriptionsOutputType = Awaited<ReturnType<_GetMySubscriptionsCfg['execute']>>;
 export const getMySubscriptions = createCaller<GetMySubscriptionsInputType, GetMySubscriptionsOutputType>('getMySubscriptions');
 
+type _GetNewsCfg = typeof _GetNewsEp;
+export type GetNewsInputType = NonNullable<_GetNewsCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GetNewsCfg['execute']>[0]['input'];
+export type GetNewsOutputType = Awaited<ReturnType<_GetNewsCfg['execute']>>;
+export const getNews = createCaller<GetNewsInputType, GetNewsOutputType>('getNews');
+
 type _GetPublicContentCfg = typeof _GetPublicContentEp;
 export type GetPublicContentInputType = NonNullable<_GetPublicContentCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GetPublicContentCfg['execute']>[0]['input'];
 export type GetPublicContentOutputType = Awaited<ReturnType<_GetPublicContentCfg['execute']>>;
@@ -58,6 +64,7 @@ export const api = {
   getIssue,
   getMyProfile,
   getMySubscriptions,
+  getNews,
   getPublicContent,
   saveProfile,
   submitArticle,

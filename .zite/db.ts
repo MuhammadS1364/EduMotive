@@ -505,6 +505,52 @@ export type SubscriptionPlansRecordInput = {
   sortOrder: string | number | null;
 };
 
+/** A record in the "Hero Slides" table, as it is read back. */
+export type HeroSlidesRecordType = {
+  id: string;
+  /** Primary field. "Image" */
+  image?: string;
+  link?: string;
+  /** "Sort Order". 1 decimal places, format: local (e.g. 1,000,000.50) */
+  sortOrder?: number;
+  visible?: boolean;
+};
+
+/** What you may write when creating or updating a record in the "Hero Slides" table. */
+export type HeroSlidesRecordInput = {
+  image: string | null;
+  link: string | null;
+  sortOrder: string | number | null;
+  visible: string | boolean | null;
+};
+
+/** A record in the "News" table, as it is read back. */
+export type NewsRecordType = {
+  id: string;
+  /** Primary field. "Title" */
+  title?: string;
+  summary?: string;
+  body?: string;
+  media?: string;
+  category?: string;
+  /** "Published At". Date-only field (YYYY-MM-DD string), null when unset, display as "local" format */
+  publishedAt?: string;
+  pinned?: boolean;
+  visible?: boolean;
+};
+
+/** What you may write when creating or updating a record in the "News" table. */
+export type NewsRecordInput = {
+  title: string | null;
+  summary: string | null;
+  body: string | null;
+  media: string | null;
+  category: string | null;
+  publishedAt: string | Date | null;
+  pinned: string | boolean | null;
+  visible: string | boolean | null;
+};
+
 export interface ZiteAuthUser {
   id: string;
   name: string;
@@ -531,6 +577,8 @@ export const zite = {
   badges: createTableClient<BadgesRecordType, BadgesRecordInput>('Badges'), // "Badges"
   stories: createTableClient<StoriesRecordType, StoriesRecordInput>('Stories'), // "Stories"
   subscriptionPlans: createTableClient<SubscriptionPlansRecordType, SubscriptionPlansRecordInput>('SubscriptionPlans'), // "Subscription Plans"
+  heroSlides: createTableClient<HeroSlidesRecordType, HeroSlidesRecordInput>('HeroSlides'), // "Hero Slides"
+  news: createTableClient<NewsRecordType, NewsRecordInput>('News'), // "News"
   sql: createSqlClient(),
   auth: createAuthClient<ZiteAuthUser>(),
 };

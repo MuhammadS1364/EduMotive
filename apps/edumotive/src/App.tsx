@@ -19,6 +19,7 @@ import SectionPage from './pages/SectionPage';
 import AuthorsPage from './pages/AuthorsPage';
 import AuthorPage from './pages/AuthorPage';
 import ContactPage from './pages/ContactPage';
+import NewsPage from './pages/NewsPage';
 import { useContent } from './lib/content';
 
 const qc = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
@@ -51,6 +52,7 @@ export default function App() {
               <Route path="/programs" element={<Gate setting="showPrograms"><ProgramsPage /></Gate>} />
               <Route path="/results" element={<Gate setting="showResults"><ResultsPage /></Gate>} />
               <Route path="/subscribe" element={<Gate setting="showSubscribe"><SubscribePage /></Gate>} />
+              <Route path="/news" element={<NewsPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
               <Route path="/account" element={<AccountPage />} />

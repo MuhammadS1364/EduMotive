@@ -44,6 +44,7 @@ export const SCHEMA: Record<string, TableDef> = {
   Stories: { fields: { caption: 't', media: 't', mediaType: 't', author: 'a', authorName: 't' } },
   SubscriptionPlans: { fields: { name: 't', price: 'n', duration: 't', features: 't', visible: 'b', sortOrder: 'n' } },
   HeroSlides: { fields: { image: 't', link: 't', sortOrder: 'n', visible: 'b' } },
+  News: { fields: { title: 't', summary: 't', body: 't', media: 't', category: 't', publishedAt: 't', pinned: 'b', visible: 'b' } },
 };
 
 /** CREATE TABLE statements for every table. */

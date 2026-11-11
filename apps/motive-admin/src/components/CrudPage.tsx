@@ -14,7 +14,7 @@ import ImageUpload from './ImageUpload';
 
 export type Field = {
   key: string; label: string;
-  type: 'text' | 'textarea' | 'number' | 'image' | 'file' | 'checkbox' | 'select' | 'date' | 'url' | 'email';
+  type: 'text' | 'textarea' | 'number' | 'image' | 'media' | 'file' | 'checkbox' | 'select' | 'date' | 'url' | 'email';
   options?: string[]; required?: boolean; full?: boolean;
 };
 
@@ -50,7 +50,7 @@ export default function CrudPage({ table, title, fields, titleKey, subtitle, ima
         <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {list.map((r) => (
             <div key={r.id} className="glass p-4 flex gap-3 items-start">
-              {imageKey && <div className="h-16 w-16 rounded-lg bg-muted overflow-hidden shrink-0">{r[imageKey] && <img src={r[imageKey]} alt="" className="h-full w-full object-cover" />}</div>}
+              {imageKey && <div className="h-16 w-16 rounded-lg bg-muted overflow-hidden shrink-0">{r[imageKey] && (/\.(mp4|webm|mov|m4v|ogg)(\?|$)/i.test(String(r[imageKey])) ? <video src={r[imageKey]} muted className="h-full w-full object-cover" /> : <img src={r[imageKey]} alt="" className="h-full w-full object-cover" />)}</div>}
               <div className="min-w-0 flex-1">
                 <p className="font-semibold truncate">{r[titleKey] || 'Untitled'}</p>
                 {subtitle && <p className="text-xs text-muted-foreground line-clamp-2">{subtitle(r)}</p>}
@@ -102,6 +102,7 @@ export function FieldInput({ f, value, onChange }: { f: Field; value: any; onCha
     case 'textarea': return <Textarea rows={4} value={value ?? ''} onChange={(e) => onChange(e.target.value)} />;
     case 'checkbox': return <div className="pt-1"><Switch checked={!!value} onCheckedChange={onChange} /></div>;
     case 'image': return <ImageUpload value={value ?? ''} onChange={onChange} />;
+    case 'media': return <div className="space-y-2"><ImageUpload value={value ?? ''} onChange={onChange} label="Upload image or video" accept="image/*,video/*" /><Input placeholder="…or paste an image/video URL" value={value ?? ''} onChange={(e) => onChange(e.target.value)} /></div>;
     case 'file': return <ImageUpload value={value ?? ''} onChange={onChange} accept="application/pdf" label="Upload PDF" />;
     case 'select': return (
       <select value={value ?? ''} onChange={(e) => onChange(e.target.value)} className="h-9 w-full rounded-md border bg-background px-3 text-sm">

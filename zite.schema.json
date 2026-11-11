@@ -1583,6 +1583,139 @@
           }
         }
       ]
+    },
+    {
+      "id": "tmw2XyytYvT",
+      "sdkName": "heroSlides",
+      "name": "Hero Slides",
+      "primaryFieldId": "f4SgPpLqv3F",
+      "fields": [
+        {
+          "id": "f4SgPpLqv3F",
+          "sdkName": "image",
+          "definition": {
+            "name": "Image",
+            "type": "url",
+            "template": {}
+          }
+        },
+        {
+          "id": "f7yTGtKf3SN",
+          "sdkName": "link",
+          "definition": {
+            "name": "Link",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fpLVHp2DYeN",
+          "sdkName": "sortOrder",
+          "definition": {
+            "name": "Sort Order",
+            "type": "number",
+            "template": {
+              "numberFormat": "local",
+              "decimalPlaces": 1
+            }
+          }
+        },
+        {
+          "id": "f1C7F9YTmqY",
+          "sdkName": "visible",
+          "definition": {
+            "name": "Visible",
+            "type": "checkbox",
+            "template": {
+              "defaultValue": true
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "t5YQb95W3DZ",
+      "sdkName": "news",
+      "name": "News",
+      "primaryFieldId": "f1vecBnZqPa",
+      "fields": [
+        {
+          "id": "f1vecBnZqPa",
+          "sdkName": "title",
+          "definition": {
+            "name": "Title",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fsDa97mzwwH",
+          "sdkName": "summary",
+          "definition": {
+            "name": "Summary",
+            "type": "long_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fiop3LtQT81",
+          "sdkName": "body",
+          "definition": {
+            "name": "Body",
+            "type": "long_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "fkF6PWnbqhy",
+          "sdkName": "media",
+          "definition": {
+            "name": "Media",
+            "type": "url",
+            "template": {}
+          }
+        },
+        {
+          "id": "fbbGLFJpNes",
+          "sdkName": "category",
+          "definition": {
+            "name": "Category",
+            "type": "single_line_text",
+            "template": {}
+          }
+        },
+        {
+          "id": "ffbjrEpefe9",
+          "sdkName": "publishedAt",
+          "definition": {
+            "name": "Published At",
+            "type": "date",
+            "template": {
+              "dateFormat": "local"
+            }
+          }
+        },
+        {
+          "id": "fdeig9JtmzC",
+          "sdkName": "pinned",
+          "definition": {
+            "name": "Pinned",
+            "type": "checkbox",
+            "template": {}
+          }
+        },
+        {
+          "id": "f5Zv6U76D55",
+          "sdkName": "visible",
+          "definition": {
+            "name": "Visible",
+            "type": "checkbox",
+            "template": {
+              "defaultValue": true
+            }
+          }
+        }
+      ]
     }
   ]
 }

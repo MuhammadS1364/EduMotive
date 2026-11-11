@@ -205,6 +205,7 @@ export function createZite(getConfig: () => TursoConfig) {
     stories: tableClient<StoriesRecordType, StoriesRecordInput>(db, 'Stories'),
     subscriptionPlans: tableClient<SubscriptionPlansRecordType, SubscriptionPlansRecordInput>(db, 'SubscriptionPlans'),
     heroSlides: tableClient<HeroSlidesRecordType, HeroSlidesRecordInput>(db, 'HeroSlides'),
+    news: tableClient<NewsRecordType, NewsRecordInput>(db, 'News'),
     /** Raw read query (SQLite dialect). */
     sql: async ({ query, params }: { query: string; params?: Val[] }) => {
       const rows = await db.execute(query, params ?? []);
@@ -216,3 +217,5 @@ export function createZite(getConfig: () => TursoConfig) {
 
 export type HeroSlidesRecordType = { id: string; image?: string; link?: string; sortOrder?: number; visible?: boolean; created?: string };
 export type HeroSlidesRecordInput = { image: string | null; link: string | null; sortOrder: string | number | null; visible: string | boolean | null };
+export type NewsRecordType = { id: string; title?: string; summary?: string; body?: string; media?: string; category?: string; publishedAt?: string; pinned?: boolean; visible?: boolean; created?: string };
+export type NewsRecordInput = { title: string | null; summary: string | null; body: string | null; media: string | null; category: string | null; publishedAt: string | null; pinned: string | boolean | null; visible: string | boolean | null };

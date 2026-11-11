@@ -17,7 +17,7 @@ All app data lives in a [Turso](https://turso.tech) (libSQL) database. `packages
 - `ZITE_TURSO_AUTH_TOKEN` – a Turso database token
 
 ## Admin access
-The admin panel (`apps/motive-admin`) only admits `edumotive4@gmail.com`, signing in with a one-time email code. No passwords are stored in the code.
+The admin panel (`apps/motive-admin`) only admits `shafeealam1364@gmail.com`, signing in with a one-time email code. No passwords are stored in the code.
 
 ## Tech stack
 React + Vite + TypeScript, Tailwind CSS, shadcn/ui, ZiteJS backend endpoints (`src/api/*.ts`) and the Zite Database.
