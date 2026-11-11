@@ -5,6 +5,7 @@ import { useAuth, loginWithRedirect } from 'zitejs/auth';
 import { Button } from '@project/components/ui/button';
 import { cn } from '@project/components/lib/utils';
 import Footer from './Footer';
+import useScrollReveal from '../lib/useScrollReveal';
 import { LOGO_URL, useContent, slugify } from '../lib/content';
 
 export default function Layout() {
@@ -13,6 +14,7 @@ export default function Layout() {
   const [q, setQ] = useState('');
   const nav = useNavigate();
   const loc = useLocation();
+  useScrollReveal();
   useEffect(() => { window.scrollTo(0, 0); }, [loc.pathname]);
 
   const s = data?.settings ?? {};
@@ -77,7 +79,7 @@ export default function Layout() {
           </div>
         )}
       </header>
-      <main className="flex-1"><Outlet /></main>
+      <main className="flex-1"><div key={loc.pathname} className="page-in"><Outlet /></div></main>
       <Footer />
       <div className="fixed bottom-5 left-5 z-40 flex flex-col gap-2">
         {loc.pathname !== '/' && (
