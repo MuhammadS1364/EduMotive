@@ -4,7 +4,7 @@ import { Check, CheckCircle2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth, loginWithRedirect } from 'zitejs/auth';
+import { useAuth, loginWithRedirect, getSession } from '../lib/auth';
 import { createSubscription, getMyProfile } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
@@ -26,7 +26,7 @@ export default function SubscribePage() {
   const plans = data?.plans ?? [];
   const plan = plans.find((p) => p.id === planId) ?? plans[0];
   const { user } = useAuth();
-  const me = useQuery({ queryKey: ['me'], queryFn: () => getMyProfile({}), enabled: !!user });
+  const me = useQuery({ queryKey: ['me'], queryFn: () => getMyProfile({ session: getSession() }), enabled: !!user });
   const [f, setF] = useState({ name: '', email: '', phone: '', address: '', transactionId: '', paymentScreenshot: '' });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -38,7 +38,7 @@ export default function SubscribePage() {
     if (!r.success) { setErrors(Object.fromEntries(r.error.issues.map((i) => [i.path[0], i.message]))); return; }
     setErrors({}); setBusy(true);
     try { if (!plan) { toast.error('Choose a plan'); setBusy(false); return; }
-      await createSubscription({ ...r.data, planId: plan.id }); setDone(true); } catch { toast.error('Could not submit. Please try again.'); } finally { setBusy(false); }
+      await createSubscription({ session: getSession(),  ...r.data, planId: plan.id }); setDone(true); } catch { toast.error('Could not submit. Please try again.'); } finally { setBusy(false); }
   };
 
   if (done) return (

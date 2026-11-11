@@ -25,5 +25,10 @@
     "ZITE_TURSO_URL": {
       "description": "Turso database URL, e.g. libsql://edumotive-trimonthly-msdurso.aws-ap-south-1.turso.io"
     }
+  },
+  "integrationSettings": {
+    "email": {
+      "fromName": "EduMotive"
+    }
   }
 }

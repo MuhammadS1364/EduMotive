@@ -11,6 +11,11 @@
     "github-2": {
       "type": "github",
       "connectionId": "svc_579318"
+    },
+    "email": {
+      "type": "email",
+      "connectionId": "svc_580676",
+      "provider": "gmail"
     }
   },
   "envVars": {

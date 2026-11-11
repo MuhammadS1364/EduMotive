@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
-import { useAuth, loginWithRedirect } from 'zitejs/auth';
+import { useAuth, loginWithRedirect } from '../lib/auth';
 import { Loader2 } from 'lucide-react';
 
 export default function RequireAuth({ children }: { children: ReactNode }) {

@@ -1,3 +1,4 @@
+import { getSession } from '../lib/auth';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, X, Trash2 } from 'lucide-react';
@@ -24,7 +25,7 @@ function Ring({ g, label, onClick, add }: { g?: Group; label: string; onClick: (
 }
 
 export default function StoriesBar() {
-  const { data, refetch } = useQuery({ queryKey: ['stories'], queryFn: () => stories({ action: 'list' }) });
+  const { data, refetch } = useQuery({ queryKey: ['stories'], queryFn: () => stories({ session: getSession(),  action: 'list' }) });
   const [adding, setAdding] = useState(false);
   const [view, setView] = useState<Group | null>(null);
   const groups = data?.groups ?? [];
@@ -47,7 +48,7 @@ function Viewer({ group, onClose, onAdd, onChanged }: { group: Group; onClose: (
   const next = () => (i < group.items.length - 1 ? setI(i + 1) : onClose());
   useEffect(() => { if (s?.mediaType === 'Image') { const t = setTimeout(next, 5000); return () => clearTimeout(t); } }, [i]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!s) return null;
-  const del = async () => { try { await stories({ action: 'delete', storyId: s.id }); onChanged(); onClose(); } catch { toast.error('Could not delete'); } };
+  const del = async () => { try { await stories({ session: getSession(),  action: 'delete', storyId: s.id }); onChanged(); onClose(); } catch { toast.error('Could not delete'); } };
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="p-0 max-w-sm overflow-hidden bg-black border-0 [&>button]:hidden">

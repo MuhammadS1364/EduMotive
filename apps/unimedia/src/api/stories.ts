@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from '../lib/db';
+import { requireUser } from '../lib/auth.server';
 
 const arr = (v: string | string[] | undefined) => [v].flat().filter((x): x is string => !!x);
 
 export default createEndpoint({
   description: 'Lists status stories from the last 24 hours, or adds/deletes your own status',
-  authenticated: true,
-  inputSchema: z.object({
+  inputSchema: z.object({ session: z.string().optional(),
     action: z.enum(['list', 'create', 'delete']),
     media: z.string().optional(),
     mediaType: z.enum(['Image', 'Video']).optional(),
@@ -20,12 +20,13 @@ export default createEndpoint({
       items: z.array(z.object({ id: z.string(), media: z.string(), mediaType: z.enum(['Image', 'Video']), caption: z.string(), created: z.string() })),
     })),
   }),
-  execute: async ({ input, context }) => {
-    const uid = context.user.id;
+  execute: async ({ input }) => {
+    const user = await requireUser(input.session);
+    const uid = user.id;
     if (input.action === 'create') {
       if (!input.media) throw new ZiteError('Please add a photo or video.');
       const p = await zite.profiles.findOne({ filters: { user: uid } });
-      const name = p?.name || context.user.firstName || context.user.email.split('@')[0];
+      const name = p?.name || user.firstName || user.email.split('@')[0];
       await zite.stories.create({ record: { media: input.media, mediaType: input.mediaType ?? 'Image', caption: input.caption ?? '', author: uid, authorName: name } });
     } else if (input.action === 'delete' && input.storyId) {
       const s = await zite.stories.findOne({ id: input.storyId });

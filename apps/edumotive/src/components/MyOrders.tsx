@@ -1,3 +1,4 @@
+import { getSession } from '../lib/auth';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -14,7 +15,7 @@ const STEPS = ['Awaiting Payment Check', 'Preparing', 'Dispatched', 'In Transit'
 
 export default function MyOrders() {
   const [open, setOpen] = useState<string | null>(null);
-  const { data } = useQuery({ queryKey: ['myOrders'], queryFn: () => getMySubscriptions({}) });
+  const { data } = useQuery({ queryKey: ['myOrders'], queryFn: () => getMySubscriptions({ session: getSession() }) });
   return (
     <div className="glass p-6 md:p-8 space-y-4">
       <div className="flex items-center justify-between"><h2 className="text-2xl font-bold">My subscriptions</h2><Button asChild size="sm" variant="outline"><Link to="/subscribe">Order</Link></Button></div>

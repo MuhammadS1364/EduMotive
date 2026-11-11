@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from '../lib/db';
+import { requireUser } from '../lib/auth.server';
 
 const arr = (v: string | string[] | undefined) => [v].flat().filter((x): x is string => !!x);
 
 export default createEndpoint({
   description: 'Gets a UniMedia profile (yours if no id) with their posts, or saves your own profile',
-  authenticated: true,
-  inputSchema: z.object({
+  inputSchema: z.object({ session: z.string().optional(),
     userId: z.string().optional(),
     save: z.object({ name: z.string().min(1), institution: z.string(), class: z.string(), bio: z.string(), avatar: z.string(), role: z.enum(['Student', 'Author']).optional() }).optional(),
   }),
@@ -16,9 +16,10 @@ export default createEndpoint({
     profile: z.object({ name: z.string(), institution: z.string(), class: z.string(), bio: z.string(), avatar: z.string(), role: z.string() }).nullable(),
     posts: z.array(z.object({ id: z.string(), image: z.string(), video: z.boolean(), likes: z.number(), comments: z.number() })),
   }),
-  execute: async ({ input, context }) => {
-    const uid = input.userId || context.user.id;
-    const isMe = uid === context.user.id;
+  execute: async ({ input }) => {
+    const user = await requireUser(input.session);
+    const uid = input.userId || user.id;
+    const isMe = uid === user.id;
     let p = await zite.profiles.findOne({ filters: { user: uid } });
     if (isMe && input.save) {
       const { role, ...rest } = input.save;

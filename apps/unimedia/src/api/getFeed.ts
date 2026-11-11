@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import { createEndpoint } from 'zitejs/backend';
 import { zite } from '../lib/db';
+import { optionalUser } from '../lib/auth.server';
 
 const arr = (v: string | string[] | undefined) => [v].flat().filter((x): x is string => !!x);
 
 export default createEndpoint({
   description: 'Loads the UniMedia feed of visible posts with likes and comments',
-  inputSchema: z.object({}),
+  inputSchema: z.object({ session: z.string().optional(),}),
   outputSchema: z.object({
     posts: z.array(z.object({
       id: z.string(), authorId: z.string(), caption: z.string(), image: z.string(), mediaType: z.enum(['Image', 'Video']), authorName: z.string(), authorAvatar: z.string(), institution: z.string(),
@@ -14,8 +15,9 @@ export default createEndpoint({
       comments: z.array(z.object({ id: z.string(), text: z.string(), authorName: z.string(), created: z.string() })),
     })),
   }),
-  execute: async ({ context }) => {
-    const me = context.user?.id;
+  execute: async ({ input }) => {
+    const user = await optionalUser(input.session);
+    const me = user?.id;
     const [p, c, pr] = await Promise.all([
       zite.posts.findAll({ filters: { hidden: false }, limit: 300 }),
       zite.comments.findAll({ limit: 2000 }),

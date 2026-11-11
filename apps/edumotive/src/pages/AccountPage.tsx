@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Loader2, LogOut, PenSquare, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
-import { logout } from 'zitejs/auth';
+import { logout, getSession } from '../lib/auth';
 import { getMyProfile, saveProfile } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';
@@ -23,7 +23,7 @@ export default function AccountPage() {
 
 function Account() {
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({ queryKey: ['me'], queryFn: () => getMyProfile({}) });
+  const { data, isLoading } = useQuery({ queryKey: ['me'], queryFn: () => getMyProfile({ session: getSession() }) });
   const [f, setF] = useState({ name: '', role: 'Student' as 'Student' | 'Author', class: '', institution: '', bio: '', avatar: '' });
   const [busy, setBusy] = useState(false);
   useEffect(() => { if (data?.profile) setF({ ...data.profile, role: data.profile.role === 'Author' ? 'Author' : 'Student' }); }, [data]);
@@ -32,7 +32,7 @@ function Account() {
     const v = { ...f, ...override };
     if (!v.name || !v.institution) { toast.error('Name and institution are required'); return; }
     setBusy(true);
-    try { await saveProfile(v); setF(v); await qc.invalidateQueries({ queryKey: ['me'] }); toast.success('Profile saved'); } catch { toast.error('Could not save'); } finally { setBusy(false); }
+    try { await saveProfile({ ...v, session: getSession() }); setF(v); await qc.invalidateQueries({ queryKey: ['me'] }); toast.success('Profile saved'); } catch { toast.error('Could not save'); } finally { setBusy(false); }
   };
 
   if (isLoading) return <div className="container mx-auto px-4 py-10 max-w-4xl"><Skeleton className="h-96" /></div>;

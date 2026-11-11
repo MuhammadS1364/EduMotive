@@ -1,3 +1,4 @@
+import { getSession } from '../lib/auth';
 import { useRef, useState } from 'react';
 import { ImagePlus, Loader2, X } from 'lucide-react';
 import { useUpload } from 'zitejs/upload';
@@ -23,8 +24,8 @@ export default function NewPost({ open, onOpenChange, onDone, mode = 'post' }: P
     if (!media) return;
     setBusy(true);
     try {
-      if (isStatus) await stories({ action: 'create', media: media.url, mediaType: media.type, caption });
-      else await postAction({ action: 'create', image: media.url, mediaType: media.type, caption, campus });
+      if (isStatus) await stories({ session: getSession(),  action: 'create', media: media.url, mediaType: media.type, caption });
+      else await postAction({ session: getSession(),  action: 'create', image: media.url, mediaType: media.type, caption, campus });
       toast.success(isStatus ? 'Status added' : 'Shared!'); reset(); onOpenChange(false); onDone();
     } catch { toast.error('Could not share'); } finally { setBusy(false); }
   };

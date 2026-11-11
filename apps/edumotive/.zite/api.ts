@@ -2,6 +2,7 @@
 
 import { createCaller } from 'zitejs/caller';
 
+import type { default as _AccountEp } from '../src/api/account';
 import type { default as _CreateSubscriptionEp } from '../src/api/createSubscription';
 import type { default as _GetArticleEp } from '../src/api/getArticle';
 import type { default as _GetIssueEp } from '../src/api/getIssue';
@@ -11,6 +12,11 @@ import type { default as _GetNewsEp } from '../src/api/getNews';
 import type { default as _GetPublicContentEp } from '../src/api/getPublicContent';
 import type { default as _SaveProfileEp } from '../src/api/saveProfile';
 import type { default as _SubmitArticleEp } from '../src/api/submitArticle';
+
+type _AccountCfg = typeof _AccountEp;
+export type AccountInputType = NonNullable<_AccountCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AccountCfg['execute']>[0]['input'];
+export type AccountOutputType = Awaited<ReturnType<_AccountCfg['execute']>>;
+export const account = createCaller<AccountInputType, AccountOutputType>('account');
 
 type _CreateSubscriptionCfg = typeof _CreateSubscriptionEp;
 export type CreateSubscriptionInputType = NonNullable<_CreateSubscriptionCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_CreateSubscriptionCfg['execute']>[0]['input'];
@@ -59,6 +65,7 @@ export const submitArticle = createCaller<SubmitArticleInputType, SubmitArticleO
 
 
 export const api = {
+  account,
   createSubscription,
   getArticle,
   getIssue,

@@ -20,6 +20,8 @@ import AuthorsPage from './pages/AuthorsPage';
 import AuthorPage from './pages/AuthorPage';
 import ContactPage from './pages/ContactPage';
 import NewsPage from './pages/NewsPage';
+import LoginPage from './pages/LoginPage';
+import { AuthProvider } from './lib/auth';
 import { useContent } from './lib/content';
 
 const qc = new QueryClient({ defaultOptions: { queries: { retry: 1, refetchOnWindowFocus: false } } });
@@ -38,6 +40,7 @@ export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <QueryClientProvider client={qc}>
+        <AuthProvider>
         <BrowserRouter>
           <Routes>
             <Route element={<Layout />}>
@@ -55,6 +58,7 @@ export default function App() {
               <Route path="/news" element={<NewsPage />} />
               <Route path="/about" element={<AboutPage />} />
               <Route path="/contact" element={<ContactPage />} />
+              <Route path="/login" element={<LoginPage />} />
               <Route path="/account" element={<AccountPage />} />
               <Route path="/write" element={<WritePage />} />
               <Route path="/write/:id" element={<WritePage />} />
@@ -63,6 +67,7 @@ export default function App() {
           </Routes>
         </BrowserRouter>
         <Toaster />
+        </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

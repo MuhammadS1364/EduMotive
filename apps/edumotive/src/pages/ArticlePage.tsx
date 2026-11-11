@@ -1,3 +1,4 @@
+import { getSession } from '../lib/auth';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -50,7 +51,7 @@ function WriteCard({ email, author }: { email: string; author: string }) {
 export default function ArticlePage() {
   const { id = '' } = useParams();
   const { data: content } = useContent();
-  const { data, isLoading, error } = useQuery({ queryKey: ['article', id], queryFn: () => getArticle({ id }) });
+  const { data, isLoading, error } = useQuery({ queryKey: ['article', id], queryFn: () => getArticle({ session: getSession(),  id }) });
 
   useEffect(() => {
     if (data) document.title = `${data.title} — Edumotive`;

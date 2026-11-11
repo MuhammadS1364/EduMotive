@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Heart, MessageCircle, Trash2, Send, Share2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
-import { useAuth, loginWithRedirect } from 'zitejs/auth';
+import { useAuth, loginWithRedirect, getSession } from '../lib/auth';
 import { postAction, GetFeedOutputType } from 'zitejs/api';
 import { Input } from '@project/components/ui/input';
 import { Button } from '@project/components/ui/button';
@@ -22,13 +22,13 @@ export default function PostCard({ post, refresh }: { post: Post; refresh: () =>
   const like = async () => {
     if (need()) return;
     setLiked(!liked); setLikes(likes + (liked ? -1 : 1));
-    try { await postAction({ action: 'like', postId: post.id }); } catch { setLiked(liked); setLikes(likes); toast.error('Could not like'); }
+    try { await postAction({ session: getSession(),  action: 'like', postId: post.id }); } catch { setLiked(liked); setLikes(likes); toast.error('Could not like'); }
   };
   const comment = async () => {
     if (need() || !text.trim()) return;
-    try { await postAction({ action: 'comment', postId: post.id, text }); setText(''); refresh(); } catch { toast.error('Could not comment'); }
+    try { await postAction({ session: getSession(),  action: 'comment', postId: post.id, text }); setText(''); refresh(); } catch { toast.error('Could not comment'); }
   };
-  const remove = async () => { try { await postAction({ action: 'delete', postId: post.id }); refresh(); } catch { toast.error('Could not delete'); } };
+  const remove = async () => { try { await postAction({ session: getSession(),  action: 'delete', postId: post.id }); refresh(); } catch { toast.error('Could not delete'); } };
   const when = post.created ? formatDistanceToNow(new Date(post.created), { addSuffix: true }) : '';
   const share = async () => {
     const url = `${window.location.origin}/p/${post.id}`;

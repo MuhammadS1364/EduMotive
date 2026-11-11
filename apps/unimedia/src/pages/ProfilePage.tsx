@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Heart, Loader2, MessageCircle, Camera, Grid3x3, LogOut, Settings, ExternalLink, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { useUpload } from 'zitejs/upload';
-import { logout } from 'zitejs/auth';
+import { logout } from '../lib/auth';
 import { profile as profileApi } from 'zitejs/api';
 import { Button } from '@project/components/ui/button';
 import { Input } from '@project/components/ui/input';

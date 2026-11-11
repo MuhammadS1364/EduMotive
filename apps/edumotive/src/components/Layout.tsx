@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Home, PenSquare, Search, User } from 'lucide-react';
-import { useAuth, loginWithRedirect } from 'zitejs/auth';
+import { useAuth, loginWithRedirect } from '../lib/auth';
 import { Button } from '@project/components/ui/button';
 import { cn } from '@project/components/lib/utils';
 import Footer from './Footer';

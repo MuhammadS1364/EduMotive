@@ -1,13 +1,13 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from '../lib/db';
+import { requireUser } from '../lib/auth.server';
 
 const arr = (v: string | string[] | undefined) => [v].flat().filter((x): x is string => !!x);
 
 export default createEndpoint({
   description: 'Creates, likes, comments on or deletes a UniMedia post for the signed-in student',
-  authenticated: true,
-  inputSchema: z.object({
+  inputSchema: z.object({ session: z.string().optional(),
     action: z.enum(['create', 'like', 'comment', 'delete']),
     postId: z.string().optional(),
     image: z.string().optional(),
@@ -17,10 +17,11 @@ export default createEndpoint({
     text: z.string().optional(),
   }),
   outputSchema: z.object({ ok: z.boolean() }),
-  execute: async ({ input, context }) => {
-    const uid = context.user.id;
+  execute: async ({ input }) => {
+    const user = await requireUser(input.session);
+    const uid = user.id;
     const profile = await zite.profiles.findOne({ filters: { user: uid } });
-    const name = profile?.name || [context.user.firstName, context.user.lastName].filter(Boolean).join(' ') || context.user.email.split('@')[0];
+    const name = profile?.name || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email.split('@')[0];
     if (input.action === 'create') {
       if (!input.image) throw new ZiteError('Please add a photo or video.');
       await zite.posts.create({ record: { image: input.image, mediaType: input.mediaType ?? 'Image', caption: input.caption ?? '', author: uid, authorName: name, institution: input.campus?.trim() || profile?.institution || '', hidden: false } });

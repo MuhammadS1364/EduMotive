@@ -2,10 +2,16 @@
 
 import { createCaller } from 'zitejs/caller';
 
+import type { default as _AccountEp } from '../src/api/account';
 import type { default as _GetFeedEp } from '../src/api/getFeed';
 import type { default as _PostActionEp } from '../src/api/postAction';
 import type { default as _ProfileEp } from '../src/api/profile';
 import type { default as _StoriesEp } from '../src/api/stories';
+
+type _AccountCfg = typeof _AccountEp;
+export type AccountInputType = NonNullable<_AccountCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_AccountCfg['execute']>[0]['input'];
+export type AccountOutputType = Awaited<ReturnType<_AccountCfg['execute']>>;
+export const account = createCaller<AccountInputType, AccountOutputType>('account');
 
 type _GetFeedCfg = typeof _GetFeedEp;
 export type GetFeedInputType = NonNullable<_GetFeedCfg['inputSchema']> extends { _input: infer I } ? I : Parameters<_GetFeedCfg['execute']>[0]['input'];
@@ -29,6 +35,7 @@ export const stories = createCaller<StoriesInputType, StoriesOutputType>('storie
 
 
 export const api = {
+  account,
   getFeed,
   postAction,
   profile,

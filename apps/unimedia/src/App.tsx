@@ -4,7 +4,9 @@ import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-quer
 import { ThemeProvider } from 'next-themes';
 import { Home, LayoutGrid, PlusSquare, User, Search } from 'lucide-react';
 import { useEffect } from 'react';
-import { useAuth, loginWithRedirect } from 'zitejs/auth';
+import { useAuth, loginWithRedirect, getSession } from './lib/auth';
+import { AuthProvider } from './lib/auth';
+import LoginPage from './pages/LoginPage';
 import { getFeed } from 'zitejs/api';
 import { Toaster } from '@project/components/ui/sonner';
 import { Input } from '@project/components/ui/input';
@@ -16,7 +18,7 @@ import StoriesBar from './components/StoriesBar';
 import ProfilePage, { PostGrid, EDUMOTIVE_URL } from './pages/ProfilePage';
 
 const qc = new QueryClient({ defaultOptions: { queries: { refetchOnWindowFocus: false } } });
-const useFeed = () => useQuery({ queryKey: ['feed'], queryFn: () => getFeed({}) });
+const useFeed = () => useQuery({ queryKey: ['feed'], queryFn: () => getFeed({ session: getSession() }) });
 
 function Feed() {
   const { data, isLoading, refetch } = useFeed();
@@ -87,6 +89,7 @@ function Shell() {
 function Gate() {
   const { user, isLoading } = useAuth();
   useEffect(() => { if (!isLoading && !user) loginWithRedirect(); }, [isLoading, user]);
+  if (window.location.pathname === '/login') return <LoginPage />;
   if (isLoading || !user) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading UniMedia…</div>;
   return <BrowserRouter><Shell /></BrowserRouter>;
 }
@@ -94,7 +97,7 @@ function Gate() {
 export default function App() {
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-      <QueryClientProvider client={qc}><Gate /><Toaster /></QueryClientProvider>
+      <QueryClientProvider client={qc}><AuthProvider><Gate /></AuthProvider><Toaster /></QueryClientProvider>
     </ThemeProvider>
   );
 }

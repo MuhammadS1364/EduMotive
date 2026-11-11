@@ -1,3 +1,4 @@
+import { getSession } from '../lib/auth';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -21,7 +22,7 @@ function Write() {
   const { id } = useParams();
   const nav = useNavigate();
   const qc = useQueryClient();
-  const { data, isLoading } = useQuery({ queryKey: ['me'], queryFn: () => getMyProfile({}) });
+  const { data, isLoading } = useQuery({ queryKey: ['me'], queryFn: () => getMyProfile({ session: getSession() }) });
   const { data: content } = useContent();
   const [f, setF] = useState({ title: '', excerpt: '', content: '', coverImage: '', section: '' });
   const [busy, setBusy] = useState(false);
@@ -43,7 +44,7 @@ function Write() {
     if (!f.title.trim() || !f.content.trim()) { toast.error('Title and content are required'); return; }
     setBusy(true);
     try {
-      await submitArticle({ ...f, id, asDraft });
+      await submitArticle({ session: getSession(),  ...f, id, asDraft });
       await qc.invalidateQueries({ queryKey: ['me'] });
       toast.success(asDraft ? 'Draft saved' : 'Submitted! The editors will review it soon.');
       nav('/account');

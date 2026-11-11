@@ -1,18 +1,20 @@
 import { z } from 'zod';
 import { createEndpoint, ZiteError } from 'zitejs/backend';
 import { zite } from '../lib/db';
+import { optionalUser } from '../lib/auth.server';
 
 export default createEndpoint({
   description: 'Loads one published article (or your own draft) for reading',
-  inputSchema: z.object({ id: z.string() }),
+  inputSchema: z.object({ session: z.string().optional(), id: z.string() }),
   outputSchema: z.object({
     id: z.string(), title: z.string(), excerpt: z.string(), content: z.string(), coverImage: z.string(),
     section: z.string(), authorName: z.string(), authorId: z.string(), publishedAt: z.string(), status: z.string(),
   }),
-  execute: async ({ input, context }) => {
+  execute: async ({ input }) => {
+    const user = await optionalUser(input.session);
     const a = await zite.articles.findOne({ id: input.id });
     const authorIds = a ? [a.author].flat().filter(Boolean) : [];
-    const mine = !!context.user && authorIds.includes(context.user.id);
+    const mine = !!user && authorIds.includes(user.id);
     if (!a || (a.status !== 'Published' && !mine)) {
       throw new ZiteError('This article is not available.');
     }
